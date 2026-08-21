@@ -2,281 +2,225 @@
 // REGRAS OFICIAIS DA RÉGUA DE COBRANÇAS MASTER
 // =========================================================================
 const regrasRegua = [
-    { dias: -10, titulo: "PDF E-mail", tipo: "ante", desc: "10 dias antes do vencimento - Envio de PDF por E-mail." },
-    { dias: 0,   titulo: "Faturamento", tipo: "vencimento", desc: "No dia do vencimento - Emissão de boletos, registros bancários e envio de faturas." },
-    { dias: 2,   titulo: "SMS de Aviso", tipo: "pos", desc: "02 dias após o vencimento - Disparo de SMS." },
-    { dias: 4,   titulo: "E-mail PDF", tipo: "pos", desc: "04 dias após o vencimento - PDF por E-mail." },
-    { dias: 10,  titulo: "E-mail PDF", tipo: "pos", desc: "10 dias após o vencimento - PDF por E-mail." },
-    { dias: 14,  titulo: "WhatsApp/E-mail", tipo: "pos", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail." },
-    { dias: 15,  titulo: "Bloqueio", tipo: "bloqueio", desc: "Bloqueio de serviço (Fibra, Outros, Wireless e Parcial MVNO)." },
-    { dias: 18,  titulo: "Assessorias", tipo: "bloqueio", desc: "Encaminhamento automático para as Assessorias Externas." },
-    { dias: 30,  titulo: "Serasa", tipo: "cancelamento", desc: "Inclusão das mensalidades negativadas no Serasa." },
-    { dias: 74.5, titulo: "Cancelamento", tipo: "cancelamento", desc: "Cancelamento automático do serviço." },
-    { dias: 75,  titulo: "Desativação", tipo: "cancelamento", desc: "Desativação definitiva (MVNO)." }
+    { dias: -10, titulo: "PDF E-mail", tipo: "ante", categoria: "fatura", desc: "10 dias antes do vencimento - Envio de PDF por E-mail." },
+    { dias: 0, titulo: "Faturamento", tipo: "vencimento", categoria: "vencimento", desc: "No dia do vencimento - Emissão de boletos, registros bancários e envio de faturas." },
+    { dias: 2, titulo: "SMS de Aviso", tipo: "pos", categoria: "sms", desc: "02 dias após o vencimento - Disparo de SMS." },
+    { dias: 4, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", desc: "04 dias após o vencimento - PDF por E-mail." },
+    { dias: 10, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", desc: "10 dias após o vencimento - PDF por E-mail." },
+    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "pos", categoria: "fatura", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail." },
+    { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", desc: "Bloqueio de serviço (Fibra, Outros, Wireless e Parcial MVNO)." },
+    { dias: 18, titulo: "Assessorias", tipo: "bloqueio", categoria: "bloqueio", desc: "Encaminhamento automático para as Assessorias Externas." },
+    { dias: 30, titulo: "Serasa", tipo: "cancelamento", categoria: "cancelamento", desc: "Inclusão das mensalidades negativadas no Serasa." },
+    { dias: 74.5, titulo: "Cancelamento", tipo: "cancelamento", categoria: "cancelamento", desc: "Cancelamento automático do serviço." },
+    { dias: 75, titulo: "Desativação", tipo: "cancelamento", categoria: "cancelamento", desc: "Desativação definitiva (MVNO)." }
 ];
 
 const diasFaturamentoOficiais = [5, 8, 10, 12, 14, 15, 20, 25, 26];
-
 let dataAtual = new Date();
-let vencimentoFocoGlobal = null; // Armazena o dia de vencimento selecionado para foco
+let vencimentoFocoGlobal = null;
+let filtroTipoGlobal = "";
+let visualizacaoAtual = "calendario";
 
 document.addEventListener("DOMContentLoaded", () => {
     exibirDiaHoje();
     popularSeletoresMesAno();
     renderizarAcoesHoje();
-    renderizarCalendario();
+    renderizarTudo();
 });
 
 function exibirDiaHoje() {
     const el = document.getElementById("infoHoje");
     const hoje = new Date();
-    const opcoes = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    el.textContent = `📅 Hoje é: ${hoje.toLocaleDateString('pt-BR', opcoes)}`;
+    el.textContent = `📅 Hoje é: ${hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
 }
 
 function popularSeletoresMesAno() {
     const selectMes = document.getElementById("selectMes");
     const selectAno = document.getElementById("selectAno");
-
-    const meses = [
-        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", 
-        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-    ];
-
-    selectMes.innerHTML = "";
-    meses.forEach((m, index) => {
-        let opt = document.createElement("option");
-        opt.value = index;
-        opt.textContent = m;
-        if (index === dataAtual.getMonth()) opt.selected = true;
-        selectMes.appendChild(opt);
-    });
-
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    selectMes.innerHTML = meses.map((m, i) => `<option value="${i}" ${i === dataAtual.getMonth() ? "selected" : ""}>${m}</option>`).join("");
     const anoAtual = dataAtual.getFullYear();
     selectAno.innerHTML = "";
-    for (let y = anoAtual - 2; y <= anoAtual + 3; y++) {
-        let opt = document.createElement("option");
-        opt.value = y;
-        opt.textContent = y;
-        if (y === anoAtual) opt.selected = true;
-        selectAno.appendChild(opt);
-    }
+    for (let y = anoAtual - 2; y <= anoAtual + 3; y++) selectAno.innerHTML += `<option value="${y}" ${y === anoAtual ? "selected" : ""}>${y}</option>`;
 }
 
 function mudarMesAno() {
-    const selectMes = document.getElementById("selectMes");
-    const selectAno = document.getElementById("selectAno");
-    
-    dataAtual.setFullYear(parseInt(selectAno.value));
-    dataAtual.setMonth(parseInt(selectMes.value));
-    
-    renderizarCalendario();
+    dataAtual.setFullYear(parseInt(document.getElementById("selectAno").value));
+    dataAtual.setMonth(parseInt(document.getElementById("selectMes").value));
+    renderizarTudo();
 }
 
 function mudarFiltroVencimento() {
-    const select = document.getElementById("selectFiltroVencimento");
-    vencimentoFocoGlobal = select.value ? parseInt(select.value) : null;
-    renderizarCalendario();
+    vencimentoFocoGlobal = document.getElementById("selectFiltroVencimento").value ? parseInt(document.getElementById("selectFiltroVencimento").value) : null;
+    renderizarTudo();
+}
+
+function mudarFiltroTipo() {
+    filtroTipoGlobal = document.getElementById("selectFiltroTipo").value;
+    renderizarTudo();
+}
+
+function mudarVisualizacao(view) {
+    visualizacaoAtual = view;
+    ["btnCalendario","btnLista","btnTimeline"].forEach(id => document.getElementById(id).classList.remove("active"));
+    document.getElementById(view === "calendario" ? "btnCalendario" : view === "lista" ? "btnLista" : "btnTimeline").classList.add("active");
+    document.getElementById("calendarView").classList.toggle("hidden", view !== "calendario");
+    document.getElementById("listView").classList.toggle("hidden", view !== "lista");
+    document.getElementById("timelineView").classList.toggle("hidden", view !== "timeline");
+    if (view !== "calendario") renderizarVisualizacaoAlternativa();
 }
 
 function coletarEventosDoMes(ano, mes) {
-    let mapaEventos = {};
-
-    let competencias = [
+    const mapaEventos = {};
+    const competencias = [
         { ano: mes === 0 ? ano - 1 : ano, mes: mes === 0 ? 11 : mes - 1 },
-        { ano: ano, mes: mes },
+        { ano, mes },
         { ano: mes === 11 ? ano + 1 : ano, mes: mes === 11 ? 0 : mes + 1 }
     ];
-
     competencias.forEach(comp => {
         diasFaturamentoOficiais.forEach(diaVenc => {
-            let dataVencimento = new Date(comp.ano, comp.mes, diaVenc);
-
+            const dataVencimento = new Date(comp.ano, comp.mes, diaVenc);
             regrasRegua.forEach(regra => {
-                let dataEvento = new Date(dataVencimento);
-                let diasArredondados = Math.round(regra.dias);
-                dataEvento.setDate(dataVencimento.getDate() + diasArredondados);
-
+                const dataEvento = new Date(dataVencimento);
+                dataEvento.setDate(dataVencimento.getDate() + Math.round(regra.dias));
                 if (dataEvento.getFullYear() === ano && dataEvento.getMonth() === mes) {
-                    let dNum = dataEvento.getDate();
-                    if (!mapaEventos[dNum]) {
-                        mapaEventos[dNum] = [];
-                    }
-                    mapaEventos[dNum].push({
-                        vencimentoOriginal: diaVenc,
-                        competenciaMes: comp.mes + 1,
-                        competenciaAno: comp.ano,
-                        tituloRegra: regra.titulo,
-                        tipo: regra.tipo,
-                        desc: regra.desc,
-                        diasOffset: regra.dias,
-                        dataReal: dataEvento
-                    });
+                    const dNum = dataEvento.getDate();
+                    if (!mapaEventos[dNum]) mapaEventos[dNum] = [];
+                    mapaEventos[dNum].push({ vencimentoOriginal: diaVenc, competenciaMes: comp.mes + 1, competenciaAno: comp.ano, tituloRegra: regra.titulo, tipo: regra.tipo, categoria: regra.categoria, desc: regra.desc, diasOffset: regra.dias, dataReal: dataEvento });
                 }
             });
         });
     });
-
     return mapaEventos;
 }
 
-// Renderiza o painel superior de ações para o dia atual do sistema
+function eventoVisivel(ev) {
+    return !filtroTipoGlobal || ev.categoria === filtroTipoGlobal;
+}
+
+function filtrarEventos(eventos) {
+    return eventos.filter(eventoVisivel);
+}
+
+function obterEventosFiltradosMes(ano, mes) {
+    const mapa = coletarEventosDoMes(ano, mes);
+    Object.keys(mapa).forEach(dia => mapa[dia] = filtrarEventos(mapa[dia]));
+    return mapa;
+}
+
+function renderizarTudo() {
+    renderizarAcoesHoje();
+    renderizarCalendario();
+    atualizarKPIs();
+    if (visualizacaoAtual !== "calendario") renderizarVisualizacaoAlternativa();
+}
+
 function renderizarAcoesHoje() {
     const containerHoje = document.getElementById("todayActionsContent");
     const hoje = new Date();
-    const anoH = hoje.getFullYear();
-    const mesH = hoje.getMonth();
-    const diaH = hoje.getDate();
-
-    let eventosMes = coletarEventosDoMes(anoH, mesH);
-    let eventosHoje = eventosMes[diaH] || [];
-
-    if (eventosHoje.length === 0) {
-        containerHoje.innerHTML = `<p class="no-actions-today">Nenhuma ação operacional da régua programada para hoje.</p>`;
+    const eventosHoje = filtrarEventos(coletarEventosDoMes(hoje.getFullYear(), hoje.getMonth())[hoje.getDate()] || []);
+    if (!eventosHoje.length) {
+        containerHoje.innerHTML = `<p class="no-actions-today">Nenhuma ação operacional da régua corresponde aos filtros para hoje.</p>`;
         return;
     }
+    containerHoje.innerHTML = `<div class="today-actions-list">${eventosHoje.map(ev => `<div class="today-action-item"><span class="badge-type ${ev.tipo}">${ev.tituloRegra}</span><div class="today-action-text"><strong>Vencimento base: Dia ${ev.vencimentoOriginal}</strong> (${labelTempo(ev)}) - ${ev.desc}</div></div>`).join("")}</div>`;
+}
 
-    let html = `<div class="today-actions-list">`;
-    eventosHoje.forEach(ev => {
-        let labelTempo = ev.diasOffset === 0 ? "No dia do vencimento" : (ev.diasOffset < 0 ? `${Math.abs(ev.diasOffset)} dias antes` : `${ev.diasOffset} dias após`);
-        html += `
-            <div class="today-action-item">
-                <span class="badge-type ${ev.tipo}">${ev.tituloRegra}</span>
-                <div class="today-action-text">
-                    <strong>Vencimento base: Dia ${ev.vencimentoOriginal}</strong> (${labelTempo}) - ${ev.desc}
-                </div>
-            </div>
-        `;
-    });
-    html += `</div>`;
-    containerHoje.innerHTML = html;
+function labelTempo(ev) {
+    return ev.diasOffset === 0 ? "No dia do vencimento" : (ev.diasOffset < 0 ? `${Math.abs(ev.diasOffset)} dias antes` : `${ev.diasOffset} dias após`);
 }
 
 function renderizarCalendario() {
     const grid = document.getElementById("calendarDays");
-    grid.innerHTML = "";
-
-    const ano = dataAtual.getFullYear();
-    const mes = dataAtual.getMonth();
-
+    const ano = dataAtual.getFullYear(), mes = dataAtual.getMonth();
     const primeiroDiaIndex = new Date(ano, mes, 1).getDay();
     const totalDiasMes = new Date(ano, mes + 1, 0).getDate();
     const totalDiasMesAnterior = new Date(ano, mes, 0).getDate();
-
-    let eventosDoMes = coletarEventosDoMes(ano, mes);
-    let hojeStr = new Date().toDateString();
-
+    const eventosDoMes = obterEventosFiltradosMes(ano, mes);
+    const hojeStr = new Date().toDateString();
     let htmlGrid = "";
 
-    // Dias do mês anterior
-    for (let i = primeiroDiaIndex; i > 0; i--) {
-        const diaNum = totalDiasMesAnterior - i + 1;
-        htmlGrid += `<div class="calendar-day other-month"><span class="day-number">${diaNum}</span></div>`;
-    }
-
-    // Dias do mês atual
+    for (let i = primeiroDiaIndex; i > 0; i--) htmlGrid += `<div class="calendar-day other-month"><span class="day-number">${totalDiasMesAnterior - i + 1}</span></div>`;
     for (let dia = 1; dia <= totalDiasMes; dia++) {
         const dataIterada = new Date(ano, mes, dia);
-        let eventosDoDia = eventosDoMes[dia] || [];
-        
-        let classesExtras = "";
-        if (dataIterada.toDateString() === hojeStr) {
-            classesExtras += " hoje";
-        }
-
-        // Lógica de Foco e Desfoque baseada no seletor de vencimento
-        let focado = true;
-        if (vencimentoFocoGlobal !== null) {
-            // Verifica se este dia possui algum evento vinculado especificamente ao vencimento em foco
-            let pertenceAoFoco = eventosDoDia.some(ev => ev.vencimentoOriginal === vencimentoFocoGlobal);
-            // Também foca se o próprio dia for o dia do vencimento selecionado
-            if (dia === vencimentoFocoGlobal || pertenceAoFoco) {
-                focado = true;
-            } else {
-                focado = false;
-            }
-        }
-
-        if (vencimentoFocoGlobal !== null && !focado) {
-            classesExtras += " unfocused";
-        } else if (vencimentoFocoGlobal !== null && focado) {
-            classesExtras += " focused";
-        }
-
+        const eventosDoDia = eventosDoMes[dia] || [];
+        let classesExtras = dataIterada.toDateString() === hojeStr ? " hoje" : "";
+        let focado = vencimentoFocoGlobal === null || dia === vencimentoFocoGlobal || eventosDoDia.some(ev => ev.vencimentoOriginal === vencimentoFocoGlobal);
+        if (vencimentoFocoGlobal !== null) classesExtras += focado ? " focused" : " unfocused";
         let bolinhasHtml = `<div class="event-dots-container">`;
-        let maxBolinhas = 4;
-        eventosDoDia.slice(0, maxBolinhas).forEach(ev => {
-            let destaqueExtra = (vencimentoFocoGlobal !== null && ev.vencimentoOriginal === vencimentoFocoGlobal) ? " dot-highlight" : "";
-            bolinhasHtml += `<span class="event-dot ${ev.tipo}${destaqueExtra}" title="Venc. ${ev.vencimentoOriginal}: ${ev.tituloRegra}"></span>`;
+        eventosDoDia.slice(0, 6).forEach(ev => {
+            const destaque = vencimentoFocoGlobal !== null && ev.vencimentoOriginal === vencimentoFocoGlobal ? " dot-highlight" : "";
+            bolinhasHtml += `<span class="event-dot ${ev.tipo}${destaque}" title="Venc. ${ev.vencimentoOriginal}: ${ev.tituloRegra}"></span>`;
         });
-
-        if (eventosDoDia.length > maxBolinhas) {
-            bolinhasHtml += `<span class="more-dots">+${eventosDoDia.length - maxBolinhas}</span>`;
-        }
+        if (eventosDoDia.length > 6) bolinhasHtml += `<span class="more-dots">+${eventosDoDia.length - 6}</span>`;
         bolinhasHtml += `</div>`;
-
-        let tagFaturamento = "";
-        if (diasFaturamentoOficiais.includes(dia)) {
-            let classeF = dia === 15 ? " principal" : "";
-            tagFaturamento = `<span class="venc-indicator${classeF}" title="Dia de Faturamento Oficial">V${dia}</span>`;
-        }
-
-        htmlGrid += `
-            <div class="calendar-day ${classesExtras}" onclick="abrirModalEventos(${ano}, ${mes}, ${dia})">
-                <div class="day-header-line">
-                    <span class="day-number">${dia}</span>
-                    ${tagFaturamento}
-                </div>
-                ${bolinhasHtml}
-            </div>
-        `;
+        const tagFaturamento = diasFaturamentoOficiais.includes(dia) ? `<span class="venc-indicator${dia === 15 ? " principal" : ""}">V${dia}</span>` : "";
+        htmlGrid += `<div class="calendar-day ${classesExtras}" onclick="abrirModalEventos(${ano}, ${mes}, ${dia})"><div class="day-header-line"><span class="day-number">${dia}</span>${tagFaturamento}</div>${bolinhasHtml}<span class="event-count">${eventosDoDia.length ? eventosDoDia.length + (eventosDoDia.length === 1 ? " evento" : " eventos") : ""}</span></div>`;
     }
-
     grid.innerHTML = htmlGrid;
 }
 
-function abrirModalEventos(ano, mes, dia) {
-    const modal = document.getElementById("modalDetalhes");
-    const titulo = document.getElementById("modalTitulo");
-    const corpo = document.getElementById("modalCorpo");
+function obterListaEventos() {
+    const ano = dataAtual.getFullYear(), mes = dataAtual.getMonth();
+    const mapa = obterEventosFiltradosMes(ano, mes);
+    const eventos = [];
+    Object.keys(mapa).forEach(dia => mapa[dia].forEach(ev => {
+        if (vencimentoFocoGlobal === null || ev.vencimentoOriginal === vencimentoFocoGlobal || Number(dia) === vencimentoFocoGlobal) eventos.push(ev);
+    }));
+    return eventos.sort((a,b) => a.dataReal - b.dataReal || a.vencimentoOriginal - b.vencimentoOriginal);
+}
 
-    const dataFormatada = new Date(ano, mes, dia).toLocaleDateString('pt-BR', { dateStyle: 'full' });
-    titulo.textContent = `Eventos Operacionais: ${dataFormatada}`;
-
-    let eventosDoMes = coletarEventosDoMes(ano, mes);
-    let eventosDoDia = eventosDoMes[dia] || [];
-
-    if (eventosDoDia.length === 0) {
-        corpo.innerHTML = `<p class="no-events">Nenhum evento da régua de cobrança programado para este dia.</p>`;
-    } else {
-        let htmlList = `<ul class="modal-events-list">`;
-        eventosDoDia.forEach(ev => {
-            let labelTempo = ev.diasOffset === 0 ? "No dia do vencimento" : (ev.diasOffset < 0 ? `${Math.abs(ev.diasOffset)} dias antes` : `${ev.diasOffset} dias após`);
-            let destaqueItem = (vencimentoFocoGlobal !== null && ev.vencimentoOriginal === vencimentoFocoGlobal) ? " style='border-left: 3px solid #38bdf8; padding-left: 8px;'" : "";
-            htmlList += `
-                <li${destaqueItem}>
-                    <span class="badge-type ${ev.tipo}">${ev.tituloRegra}</span>
-                    <div class="event-info">
-                        <strong>Vencimento base: Dia ${ev.vencimentoOriginal}</strong> (${labelTempo})
-                        <p>${ev.desc}</p>
-                    </div>
-                </li>
-            `;
-        });
-        htmlList += `</ul>`;
-        corpo.innerHTML = htmlList;
+function renderizarVisualizacaoAlternativa() {
+    const eventos = obterListaEventos();
+    const lista = document.getElementById("listView");
+    const timeline = document.getElementById("timelineView");
+    if (!eventos.length) {
+        lista.innerHTML = timeline.innerHTML = `<div class="empty-view">Nenhum evento corresponde aos filtros selecionados.</div>`;
+        return;
     }
+    const itemHTML = ev => `<div class="list-event"><div class="list-date"><strong>${ev.dataReal.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</strong><small>${labelTempo(ev)}</small></div><span class="badge-type ${ev.tipo}">${ev.tituloRegra}</span><div class="event-info"><strong>Vencimento base: Dia ${ev.vencimentoOriginal}</strong><p>${ev.desc}</p></div></div>`;
+    lista.innerHTML = `<div class="view-heading"><h3>Lista operacional</h3><span>${eventos.length} eventos no período</span></div>${eventos.map(itemHTML).join("")}`;
+    const grupos = {};
+    eventos.forEach(ev => { const chave = ev.dataReal.toISOString().slice(0,10); if (!grupos[chave]) grupos[chave] = []; grupos[chave].push(ev); });
+    timeline.innerHTML = `<div class="view-heading"><h3>Linha do tempo</h3><span>Sequência operacional do mês</span></div><div class="timeline">${Object.values(grupos).map(grupo => `<div class="timeline-group"><div class="timeline-date"><strong>${grupo[0].dataReal.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'})}</strong></div><div class="timeline-events">${grupo.map(itemHTML).join("")}</div></div>`).join("")}</div>`;
+}
 
+function atualizarKPIs() {
+    const eventos = obterListaEventos();
+    const qtd = categoria => eventos.filter(e => e.categoria === categoria).length;
+    document.getElementById("kpiBloqueios").textContent = qtd("bloqueio");
+    document.getElementById("kpiSms").textContent = qtd("sms");
+    document.getElementById("kpiFaturas").textContent = qtd("fatura");
+    document.getElementById("kpiSerasa").textContent = qtd("cancelamento");
+    document.getElementById("kpiTotal").textContent = eventos.length;
+}
+
+function abrirModalEventos(ano, mes, dia) {
+    const modal = document.getElementById("modalDetalhes"), corpo = document.getElementById("modalCorpo");
+    document.getElementById("modalTitulo").textContent = `Eventos Operacionais: ${new Date(ano, mes, dia).toLocaleDateString('pt-BR', { dateStyle: 'full' })}`;
+    const eventosDoDia = filtrarEventos(coletarEventosDoMes(ano, mes)[dia] || []).filter(ev => vencimentoFocoGlobal === null || ev.vencimentoOriginal === vencimentoFocoGlobal);
+    corpo.innerHTML = eventosDoDia.length ? `<ul class="modal-events-list">${eventosDoDia.map(ev => `<li><span class="badge-type ${ev.tipo}">${ev.tituloRegra}</span><div class="event-info"><strong>Vencimento base: Dia ${ev.vencimentoOriginal}</strong> (${labelTempo(ev)})<p>${ev.desc}</p></div></li>`).join("")}</ul>` : `<p class="no-events">Nenhum evento da régua corresponde aos filtros para este dia.</p>`;
     modal.style.display = "flex";
 }
 
-function fecharModal() {
-    document.getElementById("modalDetalhes").style.display = "none";
+function exportarCSV() {
+    const eventos = obterListaEventos();
+    const mesNome = dataAtual.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    const linhas = [["Data","Evento","Categoria","Vencimento base","Offset","Descrição"]];
+    eventos.forEach(ev => linhas.push([ev.dataReal.toLocaleDateString('pt-BR'), ev.tituloRegra, ev.categoria, `Dia ${ev.vencimentoOriginal}`, ev.diasOffset, ev.desc]));
+    const csv = "\ufeff" + linhas.map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(";")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = `regua-cobranca-${mesNome.replace(/ /g,'-')}.csv`; a.click(); URL.revokeObjectURL(url);
 }
 
-function fecharModalFora(event) {
-    const modal = document.getElementById("modalDetalhes");
-    if (event.target === modal) {
-        fecharModal();
-    }
+function exportarPDF() {
+    const eventos = obterListaEventos();
+    const mesNome = dataAtual.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    const printReport = document.getElementById("printReport");
+    printReport.innerHTML = `<h1>Master | Régua de Cobrança</h1><h2>Relatório operacional — ${mesNome}</h2><p>Filtros: ${filtroTipoGlobal || 'Todos os eventos'}${vencimentoFocoGlobal ? ` | Vencimento: dia ${vencimentoFocoGlobal}` : ''}</p><div class="print-kpis"><b>Total: ${eventos.length}</b><b>Bloqueios: ${eventos.filter(e=>e.categoria==='bloqueio').length}</b><b>SMS: ${eventos.filter(e=>e.categoria==='sms').length}</b><b>Faturas/E-mails: ${eventos.filter(e=>e.categoria==='fatura').length}</b><b>Serasa/Cancel.: ${eventos.filter(e=>e.categoria==='cancelamento').length}</b></div><table><thead><tr><th>Data</th><th>Evento</th><th>Venc.</th><th>Descrição</th></tr></thead><tbody>${eventos.map(ev=>`<tr><td>${ev.dataReal.toLocaleDateString('pt-BR')}</td><td>${ev.tituloRegra}</td><td>Dia ${ev.vencimentoOriginal}</td><td>${ev.desc}</td></tr>`).join('')}</tbody></table>`;
+    window.print();
 }
+
+function fecharModal() { document.getElementById("modalDetalhes").style.display = "none"; }
+function fecharModalFora(event) { if (event.target === document.getElementById("modalDetalhes")) fecharModal(); }

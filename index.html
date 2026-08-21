@@ -15,39 +15,58 @@
         <div id="infoHoje" class="info-hoje">📅 Hoje é: Carregando...</div>
     </header>
 
-    <!-- PAINEL DE AÇÕES NECESSÁRIAS (EVENTOS DE HOJE) -->
     <div class="today-actions-panel">
         <h3>⚡ Ações Necessárias para Hoje</h3>
-        <div id="todayActionsContent" class="today-actions-body">
-            Carregando ações de hoje...
-        </div>
+        <div id="todayActionsContent" class="today-actions-body">Carregando ações de hoje...</div>
     </div>
 
-    <!-- Controles de Mês, Ano e Filtro de Vencimento para Foco -->
+    <div class="kpi-panel" id="kpiPanel">
+        <div class="kpi-card"><span>🚫</span><div><strong id="kpiBloqueios">0</strong><small>Bloqueios / Assessorias</small></div></div>
+        <div class="kpi-card"><span>💬</span><div><strong id="kpiSms">0</strong><small>Disparos de SMS</small></div></div>
+        <div class="kpi-card"><span>📄</span><div><strong id="kpiFaturas">0</strong><small>Faturas / E-mails</small></div></div>
+        <div class="kpi-card"><span>⚠️</span><div><strong id="kpiSerasa">0</strong><small>Serasa / Cancelamentos</small></div></div>
+        <div class="kpi-card"><span>📊</span><div><strong id="kpiTotal">0</strong><small>Total de eventos</small></div></div>
+    </div>
+
     <div class="controls-panel">
         <div class="config-group">
             <label for="selectFiltroVencimento">🎯 Focar Vencimento:</label>
             <select id="selectFiltroVencimento" onchange="mudarFiltroVencimento()">
                 <option value="">-- Todos os Vencimentos --</option>
-                <option value="5">Dia 05</option>
-                <option value="8">Dia 08</option>
-                <option value="10">Dia 10</option>
-                <option value="12">Dia 12</option>
-                <option value="14">Dia 14</option>
-                <option value="15">Dia 15 (Principal)</option>
-                <option value="20">Dia 20</option>
-                <option value="25">Dia 25</option>
-                <option value="26">Dia 26</option>
+                <option value="5">Dia 05</option><option value="8">Dia 08</option><option value="10">Dia 10</option>
+                <option value="12">Dia 12</option><option value="14">Dia 14</option><option value="15">Dia 15 (Principal)</option>
+                <option value="20">Dia 20</option><option value="25">Dia 25</option><option value="26">Dia 26</option>
             </select>
         </div>
-        
+        <div class="config-group">
+            <label for="selectFiltroTipo">🔎 Filtrar Evento:</label>
+            <select id="selectFiltroTipo" onchange="mudarFiltroTipo()">
+                <option value="">Todos os eventos</option>
+                <option value="bloqueio">🚫 Bloqueios / Assessorias</option>
+                <option value="cancelamento">⚠️ Serasa / Cancelamento</option>
+                <option value="sms">💬 SMS</option>
+                <option value="fatura">📄 Faturas / E-mails</option>
+                <option value="vencimento">💰 Faturamento</option>
+            </select>
+        </div>
         <div class="date-selectors">
             <select id="selectMes" onchange="mudarMesAno()"></select>
             <select id="selectAno" onchange="mudarMesAno()"></select>
         </div>
     </div>
 
-    <!-- Legenda baseada na régua oficial -->
+    <div class="actions-toolbar">
+        <div class="view-tabs">
+            <button id="btnCalendario" class="view-tab active" onclick="mudarVisualizacao('calendario')">▦ Calendário</button>
+            <button id="btnLista" class="view-tab" onclick="mudarVisualizacao('lista')">☷ Modo Lista</button>
+            <button id="btnTimeline" class="view-tab" onclick="mudarVisualizacao('timeline')">◉ Timeline</button>
+        </div>
+        <div class="export-actions">
+            <button class="export-btn csv" onclick="exportarCSV()">⬇ Exportar CSV</button>
+            <button class="export-btn pdf" onclick="exportarPDF()">🖨 Exportar PDF</button>
+        </div>
+    </div>
+
     <div class="legend">
         <span class="legend-item"><span class="dot ante"></span> -10 Dias</span>
         <span class="legend-item"><span class="dot vencimento"></span> Faturamento / Dia 00</span>
@@ -56,23 +75,26 @@
         <span class="legend-item"><span class="dot cancelamento"></span> Serasa / Cancelamento</span>
     </div>
 
-    <!-- Grade do Calendário -->
-    <div class="calendar-grid-header">
-        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+    <div id="calendarView">
+        <div class="calendar-grid-header">
+            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+        </div>
+        <div id="calendarDays" class="calendar-grid"></div>
     </div>
-    <div id="calendarDays" class="calendar-grid"></div>
+
+    <div id="listView" class="alternate-view hidden"></div>
+    <div id="timelineView" class="alternate-view hidden"></div>
 </div>
 
-<!-- Modal de Detalhes do Dia -->
+<div id="printReport" class="print-report"></div>
+
 <div id="modalDetalhes" class="modal-overlay" onclick="fecharModalFora(event)">
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="modalTitulo">Eventos do Dia</h3>
             <button class="modal-close" onclick="fecharModal()">X</button>
         </div>
-        <div class="modal-body" id="modalCorpo">
-            <!-- Conteúdo injetado via JS -->
-        </div>
+        <div class="modal-body" id="modalCorpo"></div>
     </div>
 </div>
 
