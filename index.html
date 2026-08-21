@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário da Régua de Cobrança - Master</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Master | Régua de Cobrança</h1>
+        <p class="subtitle">Simulador e Calendário Operacional Dinâmico</p>
+        <div id="infoHoje" class="info-hoje">📅 Hoje é: Carregando...</div>
+    </header>
+
+    <!-- PAINEL DE AÇÕES NECESSÁRIAS (EVENTOS DE HOJE) -->
+    <div class="today-actions-panel">
+        <h3>⚡ Ações Necessárias para Hoje</h3>
+        <div id="todayActionsContent" class="today-actions-body">
+            Carregando ações de hoje...
+        </div>
+    </div>
+
+    <!-- Controles de Mês, Ano e Filtro de Vencimento para Foco -->
+    <div class="controls-panel">
+        <div class="config-group">
+            <label for="selectFiltroVencimento">🎯 Focar Vencimento:</label>
+            <select id="selectFiltroVencimento" onchange="mudarFiltroVencimento()">
+                <option value="">-- Todos os Vencimentos --</option>
+                <option value="5">Dia 05</option>
+                <option value="8">Dia 08</option>
+                <option value="10">Dia 10</option>
+                <option value="12">Dia 12</option>
+                <option value="14">Dia 14</option>
+                <option value="15">Dia 15 (Principal)</option>
+                <option value="20">Dia 20</option>
+                <option value="25">Dia 25</option>
+                <option value="26">Dia 26</option>
+            </select>
+        </div>
+        
+        <div class="date-selectors">
+            <select id="selectMes" onchange="mudarMesAno()"></select>
+            <select id="selectAno" onchange="mudarMesAno()"></select>
+        </div>
+    </div>
+
+    <!-- Legenda baseada na régua oficial -->
+    <div class="legend">
+        <span class="legend-item"><span class="dot ante"></span> -10 Dias</span>
+        <span class="legend-item"><span class="dot vencimento"></span> Faturamento / Dia 00</span>
+        <span class="legend-item"><span class="dot pos"></span> Avisos (2-14 Dias)</span>
+        <span class="legend-item"><span class="dot bloqueio"></span> Bloqueio / Assessorias</span>
+        <span class="legend-item"><span class="dot cancelamento"></span> Serasa / Cancelamento</span>
+    </div>
+
+    <!-- Grade do Calendário -->
+    <div class="calendar-grid-header">
+        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+    </div>
+    <div id="calendarDays" class="calendar-grid"></div>
+</div>
+
+<!-- Modal de Detalhes do Dia -->
+<div id="modalDetalhes" class="modal-overlay" onclick="fecharModalFora(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitulo">Eventos do Dia</h3>
+            <button class="modal-close" onclick="fecharModal()">X</button>
+        </div>
+        <div class="modal-body" id="modalCorpo">
+            <!-- Conteúdo injetado via JS -->
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
