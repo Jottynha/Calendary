@@ -21,13 +21,16 @@
         <div id="todayActionsContent" class="today-actions-body">Carregando ações de hoje...</div>
     </div>
 
-    <!-- Indicadores KPIs -->
-    <div class="kpi-panel" id="kpiPanel">
-        <div class="kpi-card"><span>🚫</span><div><strong id="kpiBloqueios">0</strong><small>Bloqueios / Assessorias</small></div></div>
-        <div class="kpi-card"><span>💬</span><div><strong id="kpiSms">0</strong><small>Disparos de SMS</small></div></div>
-        <div class="kpi-card"><span>📄</span><div><strong id="kpiFaturas">0</strong><small>Faturas / E-mails</small></div></div>
-        <div class="kpi-card"><span>⚠️</span><div><strong id="kpiSerasa">0</strong><small>Serasa / Cancelamentos</small></div></div>
-        <div class="kpi-card"><span>📊</span><div><strong id="kpiTotal">0</strong><small>Total de eventos</small></div></div>
+    <!-- Dashboard de Ações Individuais -->
+    <div class="dashboard-section">
+        <div class="dashboard-heading">
+            <div>
+                <h3>📊 Ações individuais do período</h3>
+                <p>Quantidades separadas por ação, respeitando os filtros e o modo de visualização.</p>
+            </div>
+            <span id="dashboardPeriodLabel" class="dashboard-period-label"></span>
+        </div>
+        <div class="kpi-panel" id="kpiPanel"></div>
     </div>
 
     <!-- Filtros e Controles -->
@@ -72,6 +75,7 @@
         <div class="export-actions">
             <button class="export-btn csv" onclick="exportarCSV()">⬇ Exportar CSV</button>
             <button class="export-btn pdf" onclick="exportarPDF()">🖨 Exportar PDF</button>
+            <button class="export-btn guide" onclick="baixarGuiaCalendario()">📘 Guia do calendário</button>
         </div>
     </div>
 
@@ -150,8 +154,22 @@
                 <p class="admin-help">A regra original continua igual. Esta alteração vale somente para esta ocorrência.</p>
                 <label>Data do evento original</label>
                 <input id="excOriginalDate" type="date">
-                <label>Evento</label>
-                <input id="excEventTitle" type="text" placeholder="Ex.: Bloqueio">
+                <label>Tipo de ação</label>
+                <select id="excTipoAcao" onchange="atualizarAutocompleteAcoes()">
+                    <option value="">Selecione o tipo...</option>
+                    <option value="ante">Pré-vencimento</option>
+                    <option value="vencimento">Vencimento / Faturamento</option>
+                    <option value="pos">Avisos pós-vencimento</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="bloqueio">Bloqueio / Assessorias</option>
+                    <option value="cancelamento">Serasa / Cancelamento</option>
+                    <option value="relatorio">Relatórios</option>
+                </select>
+                <label>Evento <span class="field-hint">(digite para pesquisar)</span></label>
+                <input id="excEventTitle" type="text" list="excEventOptions" autocomplete="off" placeholder="Selecione um tipo primeiro">
+                <input id="excActionKey" type="hidden" value="">
+                <div id="excEventHint" class="autocomplete-hint">Escolha uma ação da lista para manter o tipo e a regra corretos.</div>
+                <datalist id="excEventOptions"></datalist>
                 <label>Vencimento base (opcional)</label>
                 <input id="excVencimento" type="text" placeholder="Ex.: 15">
                 <label>Nova data</label>
@@ -173,6 +191,14 @@
             <div class="exception-history">
                 <div class="admin-section-title"><h4>🕘 Histórico de alterações</h4></div>
                 <div id="auditList">Carregando...</div>
+            </div>
+
+            <div class="guide-panel">
+                <div>
+                    <h4>📘 Guia do calendário</h4>
+                    <p>Baixe um guia rápido explicando as regras, visualizações, exceções, histórico e uso administrativo.</p>
+                </div>
+                <button class="admin-secondary" type="button" onclick="baixarGuiaCalendario()">⬇ Baixar guia em PDF</button>
             </div>
         </div>
     </div>

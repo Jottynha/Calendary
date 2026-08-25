@@ -667,3 +667,181 @@ p.subtitle {
 .exception-note {
     color: #fbbf24 !important;
 }
+
+/* =========================================================================
+   9. DASHBOARD DE AÇÕES INDIVIDUAIS
+   ========================================================================= */
+.dashboard-section {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.dashboard-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 12px;
+}
+
+.dashboard-heading h3 {
+    margin: 0 0 3px;
+    font-size: 1rem;
+    color: var(--text-main);
+}
+
+.dashboard-heading p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .74rem;
+}
+
+.dashboard-period-label {
+    color: #93c5fd;
+    font-size: .72rem;
+    white-space: nowrap;
+    padding-top: 2px;
+}
+
+.kpi-panel {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.action-kpi {
+    min-height: 92px;
+    align-items: flex-start;
+    padding: 11px;
+    transition: border-color .2s ease, transform .2s ease;
+}
+
+.action-kpi.has-events:hover {
+    border-color: #475569;
+    transform: translateY(-1px);
+}
+
+.action-kpi.is-zero {
+    opacity: .58;
+}
+
+.kpi-icon {
+    width: 31px;
+    height: 31px;
+    min-width: 31px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .95rem;
+    background: #1e293b;
+}
+
+.kpi-icon.ante { background: var(--color-ante); }
+.kpi-icon.vencimento { background: var(--color-vencimento); }
+.kpi-icon.pos { background: var(--color-pos); }
+.kpi-icon.whatsapp { background: var(--color-whatsapp); }
+.kpi-icon.bloqueio { background: var(--color-bloqueio); }
+.kpi-icon.cancelamento { background: var(--color-cancelamento); }
+.kpi-icon.relatorio { background: var(--color-relatorio); }
+
+.kpi-card-content {
+    min-width: 0;
+}
+
+.kpi-card-content strong {
+    font-size: 1.18rem;
+    line-height: 1;
+}
+
+.kpi-card-content small {
+    color: var(--text-main);
+    font-size: .72rem;
+    line-height: 1.25;
+    margin-top: 3px;
+}
+
+.kpi-card-content em {
+    display: block;
+    color: var(--text-muted);
+    font-size: .61rem;
+    line-height: 1.25;
+    margin-top: 4px;
+    font-style: normal;
+}
+
+.total-kpi {
+    border-color: #334155;
+}
+
+/* Autocomplete e seleção de ação no administrativo */
+.admin-modal select {
+    width: 100%;
+    box-sizing: border-box;
+    background: #0b1220;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 9px 10px;
+    border-radius: 6px;
+    outline: none;
+}
+
+.admin-modal select:focus {
+    border-color: var(--accent-blue);
+}
+
+.field-hint {
+    color: #64748b;
+    font-weight: 400;
+}
+
+.autocomplete-hint {
+    color: var(--text-muted);
+    font-size: .68rem;
+    line-height: 1.35;
+    margin-top: 5px;
+}
+
+.guide-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    background: #0b1220;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.guide-panel h4 {
+    margin: 0 0 4px;
+}
+
+.guide-panel p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .72rem;
+    line-height: 1.4;
+}
+
+.guide-panel .admin-secondary {
+    white-space: nowrap;
+}
+
+.export-btn.guide {
+    border-color: #7c3aed;
+    color: #ddd6fe;
+}
+
+@media (max-width: 900px) {
+    .kpi-panel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 650px) {
+    .kpi-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dashboard-heading { flex-direction: column; }
+    .dashboard-period-label { white-space: normal; }
+    .guide-panel { flex-direction: column; align-items: stretch; }
+    .guide-panel .admin-secondary { width: 100%; }
+}

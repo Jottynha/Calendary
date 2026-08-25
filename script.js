@@ -5,7 +5,7 @@
    Crie um projeto no Supabase e preencha estes dois valores.
    A chave "anon" é própria para uso no navegador; a segurança fica nas
    políticas RLS do banco (arquivo supabase.sql).
-   =========================================================================
+   ========================================================================= 
    M@sterCobranca26
    */
 const SUPABASE_URL = "https://uoyhnbjuihovbsdaitnj.supabase.co";
@@ -23,28 +23,100 @@ let eventosModalCache = [];
 // REGRAS OFICIAIS DA RÉGUA DE COBRANÇAS MASTER (LAYOUT COMPLETO)
 // =========================================================================
 const regrasRegua = [
-    { dias: -10, titulo: "PDF E-mail", tipo: "ante", categoria: "fatura", desc: "10 dias antes do vencimento - Envio de PDF por E-mail." },
-    { dias: 0, titulo: "Envio de Fatura", tipo: "vencimento", categoria: "fatura", desc: "No dia do vencimento - Envio da fatura por e-mail." },
-    { dias: 2, titulo: "SMS de Aviso", tipo: "pos", categoria: "sms", desc: "02 dias após o vencimento - Disparo de SMS." },
-    { dias: 4, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", desc: "04 dias após o vencimento - PDF por E-mail." },
-    { dias: 10, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", desc: "10 dias após o vencimento - PDF por E-mail." },
-    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "pos", categoria: "fatura", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail." },
-    { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", desc: "Bloqueio de serviço (Fibra, Outros, Wireless e Parcial MVNO)." },
-    { dias: 18, titulo: "Assessorias", tipo: "bloqueio", categoria: "bloqueio", desc: "Encaminhamento automático para as Assessorias Externas." },
-    { dias: 30, titulo: "Serasa", tipo: "cancelamento", categoria: "cancelamento", desc: "Inclusão das mensalidades negativadas no Serasa." },
-    { dias: 74.5, titulo: "Cancelamento", tipo: "cancelamento", categoria: "cancelamento", desc: "Cancelamento automático do serviço." },
-    { dias: 75, titulo: "Desativação", tipo: "cancelamento", categoria: "cancelamento", desc: "Desativação definitiva (MVNO)." }
+    { dias: -10, titulo: "PDF E-mail", tipo: "ante", categoria: "fatura", actionKey: "pdf_antes", desc: "10 dias antes do vencimento - Envio de PDF por E-mail." },
+    { dias: 0, titulo: "Envio de Fatura", tipo: "vencimento", categoria: "fatura", actionKey: "fatura_dia", desc: "No dia do vencimento - Envio da fatura por e-mail." },
+    { dias: 2, titulo: "SMS de Aviso", tipo: "pos", categoria: "sms", actionKey: "sms_2", desc: "02 dias após o vencimento - Disparo de SMS." },
+    { dias: 4, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", actionKey: "email_4", desc: "04 dias após o vencimento - PDF por E-mail." },
+    { dias: 10, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", actionKey: "email_10", desc: "10 dias após o vencimento - PDF por E-mail." },
+    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "pos", categoria: "fatura", actionKey: "whatsapp_14", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail." },
+    { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", actionKey: "bloqueio_15", desc: "Bloqueio de serviço (Fibra, Outros, Wireless e Parcial MVNO)." },
+    { dias: 18, titulo: "Assessorias", tipo: "bloqueio", categoria: "bloqueio", actionKey: "assessorias_18", desc: "Encaminhamento automático para as Assessorias Externas." },
+    { dias: 30, titulo: "Serasa", tipo: "cancelamento", categoria: "cancelamento", actionKey: "serasa_30", desc: "Inclusão das mensalidades negativadas no Serasa." },
+    { dias: 74.5, titulo: "Cancelamento", tipo: "cancelamento", categoria: "cancelamento", actionKey: "cancelamento_745", desc: "Cancelamento automático do serviço, calculado a partir da data de vencimento." },
+    { dias: 75, titulo: "Desativação", tipo: "cancelamento", categoria: "cancelamento", actionKey: "desativacao_75", desc: "Desativação definitiva (MVNO), calculada a partir da data de vencimento." }
 ];
 
 // =========================================================================
 // REGRAS DA VISÃO ENXUTA
 // =========================================================================
 const regrasEnxutas = [
-    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "whatsapp", categoria: "fatura", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail."},
-    { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", desc: "15 dias após o vencimento - Bloqueio de serviço." }
+    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "whatsapp", categoria: "fatura", actionKey: "whatsapp_14", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail."},
+    { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", actionKey: "bloqueio_15", desc: "15 dias após o vencimento - Bloqueio de serviço." }
 ];
 
 const diasFaturamentoOficiais = [5, 8, 10, 12, 14, 15, 20, 25, 26];
+const catalogoAcoes = [
+    { actionKey: "pdf_antes", titulo: "PDF E-mail", grupo: "ante", categoria: "fatura", tipoEvento: "ante", descricao: "10 dias antes do vencimento." },
+    { actionKey: "fatura_dia", titulo: "Envio de Fatura", grupo: "vencimento", categoria: "fatura", tipoEvento: "vencimento", descricao: "No dia do vencimento." },
+    { actionKey: "sms_2", titulo: "SMS de Aviso", grupo: "pos", categoria: "sms", tipoEvento: "pos", descricao: "2 dias após o vencimento." },
+    { actionKey: "email_4", titulo: "E-mail PDF", grupo: "pos", categoria: "fatura", tipoEvento: "pos", descricao: "4 dias após o vencimento." },
+    { actionKey: "email_10", titulo: "E-mail PDF", grupo: "pos", categoria: "fatura", tipoEvento: "pos", descricao: "10 dias após o vencimento." },
+    { actionKey: "whatsapp_14", titulo: "WhatsApp/E-mail", grupo: "whatsapp", categoria: "fatura", tipoEvento: "pos", descricao: "14 dias após o vencimento." },
+    { actionKey: "bloqueio_15", titulo: "Bloqueio", grupo: "bloqueio", categoria: "bloqueio", tipoEvento: "bloqueio", descricao: "15 dias após o vencimento." },
+    { actionKey: "assessorias_18", titulo: "Assessorias", grupo: "bloqueio", categoria: "bloqueio", tipoEvento: "bloqueio", descricao: "18 dias após o vencimento." },
+    { actionKey: "serasa_30", titulo: "Serasa", grupo: "cancelamento", categoria: "cancelamento", tipoEvento: "cancelamento", descricao: "30 dias após o vencimento." },
+    { actionKey: "cancelamento_745", titulo: "Cancelamento", grupo: "cancelamento", categoria: "cancelamento", tipoEvento: "cancelamento", descricao: "74,5 dias após o vencimento." },
+    { actionKey: "desativacao_75", titulo: "Desativação", grupo: "cancelamento", categoria: "cancelamento", tipoEvento: "cancelamento", descricao: "75 dias após o vencimento." },
+    { actionKey: "fat_normal", titulo: "Faturamento Normal", grupo: "vencimento", categoria: "fatura", tipoEvento: "vencimento", descricao: "Faturamento mensal normal." },
+    { actionKey: "fat_b2b", titulo: "Faturamento B2B", grupo: "vencimento", categoria: "fatura", tipoEvento: "vencimento", descricao: "Faturamento mensal B2B." },
+    { actionKey: "fat_pos16", titulo: "Faturamento (Pós-16)", grupo: "vencimento", categoria: "fatura", tipoEvento: "vencimento", descricao: "Faturamento para clientes ativados após o dia 16." },
+    { actionKey: "corte_12", titulo: "Data de Corte (Cancelamento)", grupo: "cancelamento", categoria: "cancelamento", tipoEvento: "cancelamento", descricao: "Corte mensal de clientes bloqueados." },
+    { actionKey: "relatorio_b2b", titulo: "Relatório B2B", grupo: "relatorio", categoria: "relatorio", tipoEvento: "relatorio", descricao: "Relatório semanal B2B." },
+    { actionKey: "relatorio_assessorias", titulo: "Relatórios Assessorias / Diretoria", grupo: "relatorio", categoria: "relatorio", tipoEvento: "relatorio", descricao: "Relatórios para assessorias e diretoria." }
+];
+
+function obterAcaoCatalogo(titulo, tipoEvento = null) {
+    return catalogoAcoes.find(a => a.titulo === titulo && (!tipoEvento || a.tipoEvento === tipoEvento)) || catalogoAcoes.find(a => a.titulo === titulo) || null;
+}
+
+function obterRotuloAutocomplete(acao) {
+    const detalhes = {
+        pdf_antes: "D-10", fatura_dia: "D0", sms_2: "D+2", email_4: "D+4",
+        email_10: "D+10", whatsapp_14: "D+14", bloqueio_15: "D+15", assessorias_18: "D+18",
+        serasa_30: "D+30", cancelamento_745: "D+74,5", desativacao_75: "D+75"
+    }[acao.actionKey] || "Data fixa";
+    return `${acao.titulo} — ${detalhes}`;
+}
+
+function atualizarAutocompleteAcoes() {
+    const tipo = document.getElementById("excTipoAcao")?.value || "";
+    const input = document.getElementById("excEventTitle");
+    const datalist = document.getElementById("excEventOptions");
+    const hint = document.getElementById("excEventHint");
+    const hiddenKey = document.getElementById("excActionKey");
+    if (!input || !datalist) return;
+
+    const opcoes = catalogoAcoes.filter(a => !tipo || a.grupo === tipo);
+    datalist.innerHTML = opcoes.map(a => `<option value="${escapeHTML(obterRotuloAutocomplete(a))}">${escapeHTML(a.descricao)}</option>`).join("");
+    if (hint) hint.textContent = tipo ? "Digite ou escolha uma sugestão. D-10, D+4, D+10 etc. diferenciam ações com o mesmo nome." : "Escolha uma ação da lista para manter o tipo e a regra corretos.";
+    input.placeholder = tipo ? "Digite para pesquisar a ação..." : "Selecione um tipo primeiro";
+
+    if (hiddenKey && tipo && hiddenKey.value && !opcoes.some(a => a.actionKey === hiddenKey.value)) hiddenKey.value = "";
+}
+
+function sincronizarTipoComEvento() {
+    const input = document.getElementById("excEventTitle");
+    const select = document.getElementById("excTipoAcao");
+    const hiddenKey = document.getElementById("excActionKey");
+    if (!input || !select) return;
+    const texto = input.value.trim();
+    let acao = catalogoAcoes.find(a => obterRotuloAutocomplete(a) === texto);
+    if (!acao) acao = catalogoAcoes.find(a => a.titulo === texto && (!select.value || a.grupo === select.value));
+    if (acao) {
+        select.value = acao.grupo;
+        if (hiddenKey) hiddenKey.value = acao.actionKey;
+        const hint = document.getElementById("excEventHint");
+        if (hint) hint.textContent = `Selecionado: ${acao.titulo} — ${acao.descricao}`;
+        atualizarAutocompleteAcoes();
+        input.value = obterRotuloAutocomplete(acao);
+    } else if (hiddenKey) {
+        hiddenKey.value = "";
+    }
+}
+
+const catalogoDashboardCompleto = catalogoAcoes.filter(a => !["fat_normal","fat_b2b","fat_pos16","corte_12","relatorio_b2b","relatorio_assessorias"].includes(a.actionKey));
+const catalogoDashboardEnxuto = catalogoAcoes.filter(a => ["whatsapp_14","bloqueio_15","fat_normal","fat_b2b","fat_pos16","corte_12","relatorio_b2b","relatorio_assessorias"].includes(a.actionKey));
+
 
 let dataAtual = new Date();
 let vencimentoFocoGlobal = null;
@@ -218,6 +290,7 @@ function aplicarExcecoesAoMapa(mapa, ano, mes) {
             competenciaMes: originalData.getMonth() + 1,
             competenciaAno: originalData.getFullYear(),
             tituloRegra: exc.event_title,
+            actionKey: regra?.actionKey || obterAcaoCatalogo(exc.event_title)?.actionKey || exc.event_title,
             tipo: exc.tipo || regra?.tipo || "bloqueio",
             categoria: exc.categoria || regra?.categoria || "bloqueio",
             desc: (exc.descricao || regra?.desc || "Evento alterado por exceção.") +
@@ -459,27 +532,40 @@ async function salvarExcecao() {
     }
 
     const original = document.getElementById("excOriginalDate").value;
-    const titulo = document.getElementById("excEventTitle").value.trim();
+    const tipoSelecionado = document.getElementById("excTipoAcao")?.value || "";
+    const tituloDigitado = document.getElementById("excEventTitle").value.trim();
+    const actionKeySelecionado = document.getElementById("excActionKey")?.value || "";
+    const acaoPorChave = catalogoAcoes.find(a => a.actionKey === actionKeySelecionado);
+    const titulo = acaoPorChave?.titulo || catalogoAcoes.find(a => obterRotuloAutocomplete(a) === tituloDigitado)?.titulo || tituloDigitado;
     const venc = document.getElementById("excVencimento").value.trim() || null;
     const nova = document.getElementById("excNewDate").value;
     const motivo = document.getElementById("excMotivo").value.trim();
 
-    if (!original || !titulo || !nova || !motivo) {
-        status.textContent = "Preencha data original, evento, nova data e motivo.";
+    if (!original || !tipoSelecionado || !titulo || !nova || !motivo) {
+        status.textContent = "Preencha data original, tipo, evento, nova data e motivo.";
         return;
     }
 
-    const eventoRef = regrasRegua.find(r => r.titulo === titulo) ||
-                      regrasEnxutas.find(r => r.titulo === titulo);
+    const acaoCatalogo = catalogoAcoes.find(a => a.actionKey === actionKeySelecionado && a.grupo === tipoSelecionado) ||
+                         catalogoAcoes.find(a => a.titulo === titulo && a.grupo === tipoSelecionado);
+    if (!acaoCatalogo) {
+        status.textContent = "Escolha uma ação válida para o tipo selecionado.";
+        atualizarAutocompleteAcoes();
+        return;
+    }
+
+    const eventoRef = regrasRegua.find(r => r.actionKey === acaoCatalogo.actionKey) ||
+                      regrasEnxutas.find(r => r.actionKey === acaoCatalogo.actionKey) ||
+                      acaoCatalogo;
 
     const payload = {
         original_date: original,
         new_date: nova,
         event_title: titulo,
         vencimento_original: venc,
-        tipo: eventoRef?.tipo || "bloqueio",
+        tipo: eventoRef?.tipoEvento || eventoRef?.tipo || "bloqueio",
         categoria: eventoRef?.categoria || "bloqueio",
-        descricao: eventoRef?.desc || null,
+        descricao: eventoRef?.desc || eventoRef?.descricao || null,
         motivo,
         ativo: true,
         created_by: usuarioAdmin.id
@@ -495,6 +581,10 @@ async function salvarExcecao() {
     }
 
     status.textContent = "Exceção salva. Atualizando calendário...";
+    document.getElementById("excActionKey").value = "";
+    document.getElementById("excEventTitle").value = "";
+    document.getElementById("excTipoAcao").value = "";
+    atualizarAutocompleteAcoes();
     await carregarExcecoes();
     renderizarTudo();
     renderizarAdmin();
@@ -530,6 +620,10 @@ function renderizarAdmin() {
     const lista = document.getElementById("exceptionList");
     const audit = document.getElementById("auditList");
     if (!lista || !audit) return;
+
+    atualizarAutocompleteAcoes();
+    const inputEvento = document.getElementById("excEventTitle");
+    if (inputEvento) inputEvento.oninput = sincronizarTipoComEvento;
 
     lista.innerHTML = excecoesCache.length ? excecoesCache.map(e => `
         <div class="admin-row">
@@ -570,6 +664,19 @@ async function carregarHistorico() {
     `).join("") : `<p class="admin-empty">Nenhuma alteração registrada.</p>`;
 }
 
+function calcularDataEventoExata(dataBase, dias) {
+    const dataEvento = new Date(dataBase);
+    const diasInteiros = Math.trunc(dias);
+    const fracao = Math.abs(dias - diasInteiros);
+
+    // Mantém a data do calendário fiel ao offset, inclusive para regras como D+74,5.
+    dataEvento.setDate(dataEvento.getDate() + diasInteiros);
+    if (fracao > 0) {
+        dataEvento.setTime(dataEvento.getTime() + (Math.sign(dias) || 1) * fracao * 24 * 60 * 60 * 1000);
+    }
+    return dataEvento;
+}
+
 function coletarEventosDoMes(ano, mes) {
     const mapaEventos = {};
 
@@ -581,6 +688,8 @@ function coletarEventosDoMes(ano, mes) {
     if (!modoVisaoEnxuta) {
         // =========================================================
         // MODO LAYOUT COMPLETO (SISTEMA ORIGINAL)
+        // Cancelamento e Desativação são calculados individualmente a partir
+        // de cada data de vencimento. A Visão Enxuta permanece inalterada.
         // =========================================================
         const competencias = [
             { ano: mes === 0 ? ano - 1 : ano, mes: mes === 0 ? 11 : mes - 1 },
@@ -591,8 +700,7 @@ function coletarEventosDoMes(ano, mes) {
             diasFaturamentoOficiais.forEach(diaVenc => {
                 const dataVencimento = new Date(comp.ano, comp.mes, diaVenc);
                 regrasRegua.forEach(regra => {
-                    const dataEvento = new Date(dataVencimento);
-                    dataEvento.setDate(dataVencimento.getDate() + Math.round(regra.dias));
+                    const dataEvento = calcularDataEventoExata(dataVencimento, regra.dias);
                     if (dataEvento.getFullYear() === ano && dataEvento.getMonth() === mes) {
                         const dNum = dataEvento.getDate();
                         adicionarEvento(dNum, { 
@@ -600,6 +708,7 @@ function coletarEventosDoMes(ano, mes) {
                             competenciaMes: comp.mes + 1, 
                             competenciaAno: comp.ano, 
                             tituloRegra: regra.titulo, 
+                            actionKey: regra.actionKey || obterAcaoCatalogo(regra.titulo)?.actionKey || regra.titulo,
                             tipo: regra.tipo, 
                             categoria: regra.categoria, 
                             desc: regra.desc, 
@@ -634,6 +743,7 @@ function coletarEventosDoMes(ano, mes) {
                             competenciaMes: comp.mes + 1, 
                             competenciaAno: comp.ano, 
                             tituloRegra: regra.titulo, 
+                            actionKey: regra.actionKey || obterAcaoCatalogo(regra.titulo)?.actionKey || regra.titulo,
                             tipo: regra.tipo, 
                             categoria: regra.categoria, 
                             desc: regra.desc, 
@@ -658,6 +768,7 @@ function coletarEventosDoMes(ano, mes) {
                 competenciaMes: mes + 1,
                 competenciaAno: ano,
                 tituloRegra: fat.titulo,
+                actionKey: fat.titulo === "Faturamento Normal" ? "fat_normal" : fat.titulo === "Faturamento B2B" ? "fat_b2b" : "fat_pos16",
                 tipo: "vencimento",
                 categoria: "fatura",
                 desc: fat.desc,
@@ -697,6 +808,7 @@ function coletarEventosDoMes(ano, mes) {
             competenciaMes: mes + 1,
             competenciaAno: ano,
             tituloRegra: "Data de Corte (Cancelamento)",
+            actionKey: "corte_12",
             tipo: "cancelamento",
             categoria: "cancelamento",
             desc: `Cancelamento de clientes bloqueados há ≥ 74.5 dias (bloqueio até ${dataLimiteBloqueio.toLocaleDateString('pt-BR')}). ${detalheRegra}`,
@@ -716,6 +828,7 @@ function coletarEventosDoMes(ano, mes) {
                     competenciaMes: mes + 1,
                     competenciaAno: ano,
                     tituloRegra: "Relatório B2B",
+                    actionKey: "relatorio_b2b",
                     tipo: "relatorio",
                     categoria: "relatorio",
                     desc: "Toda segunda-feira: Gerar relatório de inadimplência da base B2B de cobrança master.",
@@ -728,6 +841,7 @@ function coletarEventosDoMes(ano, mes) {
                     competenciaMes: mes + 1,
                     competenciaAno: ano,
                     tituloRegra: "Relatórios Assessorias / Diretoria",
+                    actionKey: "relatorio_assessorias",
                     tipo: "relatorio",
                     categoria: "relatorio",
                     desc: "Toda terça e sexta-feira: Gerar relatório para assessorias (com ranking) e relatório preventivo de inadimplência para diretoria.",
@@ -891,13 +1005,26 @@ function renderizarVisualizacaoAlternativa() {
 
 function atualizarKPIs() {
     const eventos = obterListaEventos();
-    const qtd = categoria => eventos.filter(e => e.categoria === categoria).length;
-    
-    if (document.getElementById("kpiBloqueios")) document.getElementById("kpiBloqueios").textContent = qtd("bloqueio");
-    if (document.getElementById("kpiSms")) document.getElementById("kpiSms").textContent = qtd("sms");
-    if (document.getElementById("kpiFaturas")) document.getElementById("kpiFaturas").textContent = qtd("fatura");
-    if (document.getElementById("kpiSerasa")) document.getElementById("kpiSerasa").textContent = qtd("cancelamento");
-    if (document.getElementById("kpiTotal")) document.getElementById("kpiTotal").textContent = eventos.length;
+    const catalogo = modoVisaoEnxuta ? catalogoDashboardEnxuto : catalogoDashboardCompleto;
+    const painel = document.getElementById("kpiPanel");
+    const periodo = document.getElementById("dashboardPeriodLabel");
+    if (!painel) return;
+
+    if (periodo) {
+        const nomeMes = dataAtual.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+        periodo.textContent = `${modoVisaoEnxuta ? "Visão enxuta" : "Layout completo"} • ${nomeMes}`;
+    }
+
+    const icones = { ante: "⏳", vencimento: "📄", pos: "💬", whatsapp: "📱", bloqueio: "🚫", cancelamento: "⚠️", relatorio: "📊" };
+    painel.innerHTML = catalogo.map(acao => {
+        const quantidade = eventos.filter(ev => (ev.actionKey || ev.tituloRegra) === acao.actionKey).length;
+        const classe = acao.tipoEvento || acao.grupo;
+        return `<div class="kpi-card action-kpi ${quantidade ? "has-events" : "is-zero"}">
+            <span class="kpi-icon ${classe}">${icones[acao.grupo] || "•"}</span>
+            <div class="kpi-card-content"><strong>${quantidade}</strong><small>${escapeHTML(acao.titulo)}</small><em>${escapeHTML(acao.descricao)}</em></div>
+        </div>`;
+    }).join("");
+    painel.innerHTML += `<div class="kpi-card action-kpi total-kpi has-events"><span class="kpi-icon">Σ</span><div class="kpi-card-content"><strong>${eventos.length}</strong><small>Total de ações</small><em>Respeitando os filtros atuais.</em></div></div>`;
 }
 
 function abrirModalEventos(ano, mes, dia) {
@@ -944,6 +1071,15 @@ function abrirModalEventos(ano, mes, dia) {
 
     corpo.innerHTML = listaHtml + editorHtml;
     modal.style.display = "flex";
+}
+
+function baixarGuiaCalendario() {
+    const link = document.createElement("a");
+    link.href = "GUIA_CALENDARIO.pdf";
+    link.download = "Guia_Calendario_Regua_Cobranca.pdf";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 }
 
 function exportarCSV() {
