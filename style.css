@@ -586,3 +586,84 @@ p.subtitle {
 @media (max-width: 560px) {
     .admin-row { align-items: flex-start; }
 }
+
+/* Editor de exceção dentro do modal do dia */
+.modal-exception-editor {
+    margin-top: 16px;
+    padding: 15px;
+    border: 1px solid #3730a3;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+}
+
+.modal-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.modal-editor-header h4 {
+    margin: 0 0 4px;
+    color: var(--text-main);
+    font-size: .92rem;
+}
+
+.modal-editor-header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .74rem;
+}
+
+.modal-exception-editor label {
+    display: block;
+    margin: 8px 0 4px;
+    color: var(--text-muted);
+    font-size: .75rem;
+}
+
+.modal-exception-editor input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #111827;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: .82rem;
+}
+
+.modal-exception-editor input[readonly] {
+    opacity: .72;
+}
+
+.modal-edit-btn {
+    margin-top: 8px;
+    border: 1px solid #4f46e5;
+    background: #172554;
+    color: #bfdbfe;
+    padding: 6px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+.modal-edit-btn:hover {
+    background: #1e3a8a;
+}
+
+.modal-editor-close {
+    border: 1px solid var(--border-color);
+    background: var(--panel-bg);
+    color: var(--text-muted);
+    padding: 6px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: .72rem;
+}
+
+.exception-note {
+    color: #fbbf24 !important;
+}

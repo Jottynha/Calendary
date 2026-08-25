@@ -5,7 +5,7 @@
    Crie um projeto no Supabase e preencha estes dois valores.
    A chave "anon" é própria para uso no navegador; a segurança fica nas
    políticas RLS do banco (arquivo supabase.sql).
-   ========================================================================= 
+   =========================================================================
    M@sterCobranca26
    */
 const SUPABASE_URL = "https://uoyhnbjuihovbsdaitnj.supabase.co";
@@ -18,6 +18,7 @@ const supabaseClient = (window.supabase && SUPABASE_URL.startsWith("http") && !S
 let excecoesCache = [];
 let usuarioAdmin = null;
 let ehAdmin = false;
+let eventosModalCache = [];
 // =========================================================================
 // REGRAS OFICIAIS DA RÉGUA DE COBRANÇAS MASTER (LAYOUT COMPLETO)
 // =========================================================================
@@ -315,6 +316,139 @@ async function logoutAdmin() {
     ehAdmin = false;
     fecharAdmin();
     atualizarBotaoAdmin();
+}
+
+function preencherFormularioExcecao({ originalDate = "", eventTitle = "", vencimento = "", newDate = "", motivo = "", exceptionId = "" } = {}) {
+    const originalEl = document.getElementById("modalExcOriginalDate");
+    const titleEl = document.getElementById("modalExcEventTitle");
+    const vencEl = document.getElementById("modalExcVencimento");
+    const newEl = document.getElementById("modalExcNewDate");
+    const motivoEl = document.getElementById("modalExcMotivo");
+    if (!originalEl || !titleEl || !vencEl || !newEl || !motivoEl) return;
+
+    originalEl.value = originalDate || "";
+    titleEl.value = eventTitle || "";
+    vencEl.value = vencimento ?? "";
+    newEl.value = newDate || "";
+    motivoEl.value = motivo || "";
+    originalEl.readOnly = true;
+    titleEl.readOnly = true;
+    vencEl.readOnly = true;
+    document.getElementById("modalExceptionEditingId").value = exceptionId || "";
+}
+
+function limparFormularioExcecao() {
+    preencherFormularioExcecao();
+    const originalEl = document.getElementById("modalExcOriginalDate");
+    const titleEl = document.getElementById("modalExcEventTitle");
+    const vencEl = document.getElementById("modalExcVencimento");
+    if (originalEl) originalEl.readOnly = false;
+    if (titleEl) titleEl.readOnly = false;
+    if (vencEl) vencEl.readOnly = false;
+    const status = document.getElementById("modalExceptionStatus");
+    if (status) status.textContent = "";
+}
+
+function abrirEditorExcecaoNoModal(indice) {
+    if (!ehAdmin) {
+        abrirLoginAdmin();
+        return;
+    }
+
+    const ev = eventosModalCache[indice];
+    if (!ev) return;
+
+    const originalDate = ev.dataOriginalExcecao || dataISO(ev.dataReal);
+    const novaData = ev.excecao ? dataISO(ev.dataReal) : dataISO(ev.dataReal);
+    const motivo = ev.excecao ? (ev.motivoExcecao || "") : "";
+
+    preencherFormularioExcecao({
+        originalDate,
+        eventTitle: ev.tituloRegra,
+        vencimento: (ev.vencimentoOriginal === "N/A" || ev.vencimentoOriginal === "Geral" || ev.vencimentoOriginal === "Bloqueados") ? "" : ev.vencimentoOriginal,
+        newDate: novaData,
+        motivo,
+        exceptionId: ev.idExcecao || ""
+    });
+
+    const titulo = document.getElementById("modalEditorTitulo");
+    if (titulo) titulo.textContent = ev.excecao ? "✏️ Editar alteração excepcional" : "✏️ Criar alteração excepcional";
+    const botao = document.getElementById("btnSalvarExcecaoModal");
+    if (botao) botao.textContent = ev.excecao ? "Salvar alteração" : "Criar exceção";
+    const editor = document.getElementById("modalEditorExcecao");
+    if (editor) editor.style.display = "block";
+    const corpo = document.getElementById("modalCorpo");
+    if (corpo) editor?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function fecharEditorExcecaoNoModal() {
+    const editor = document.getElementById("modalEditorExcecao");
+    if (editor) editor.style.display = "none";
+    limparFormularioExcecao();
+}
+
+async function salvarExcecaoDoModal() {
+    if (!supabaseClient || !ehAdmin || !usuarioAdmin) return;
+
+    const status = document.getElementById("modalExceptionStatus");
+    const original = document.getElementById("modalExcOriginalDate").value;
+    const titulo = document.getElementById("modalExcEventTitle").value.trim();
+    const venc = document.getElementById("modalExcVencimento").value.trim() || null;
+    const nova = document.getElementById("modalExcNewDate").value;
+    const motivo = document.getElementById("modalExcMotivo").value.trim();
+    const exceptionId = document.getElementById("modalExceptionEditingId").value;
+
+    if (!original || !titulo || !nova || !motivo) {
+        status.textContent = "Preencha a nova data e o motivo.";
+        return;
+    }
+
+    if (original === nova) {
+        status.textContent = "A nova data precisa ser diferente da data original.";
+        return;
+    }
+
+    const eventoRef = regrasRegua.find(r => r.titulo === titulo) || regrasEnxutas.find(r => r.titulo === titulo);
+    const payload = {
+        original_date: original,
+        new_date: nova,
+        event_title: titulo,
+        vencimento_original: venc,
+        tipo: eventoRef?.tipo || "bloqueio",
+        categoria: eventoRef?.categoria || "bloqueio",
+        descricao: eventoRef?.desc || null,
+        motivo,
+        ativo: true
+    };
+
+    status.textContent = "Salvando...";
+    let result;
+    if (exceptionId) {
+        result = await supabaseClient
+            .from("excecoes_calendario")
+            .update(payload)
+            .eq("id", exceptionId);
+    } else {
+        result = await supabaseClient
+            .from("excecoes_calendario")
+            .insert({ ...payload, created_by: usuarioAdmin.id });
+    }
+
+    if (result.error) {
+        console.error(result.error);
+        status.textContent = "Não foi possível salvar a alteração.";
+        return;
+    }
+
+    status.textContent = "Alteração salva. Atualizando calendário...";
+    await carregarExcecoes();
+    fecharEditorExcecaoNoModal();
+    renderizarTudo();
+    renderizarAdmin();
+
+    // Reabre o mesmo dia para o administrador conferir a alteração imediatamente.
+    const dataReabrir = new Date(`${nova}T12:00:00`);
+    abrirModalEventos(dataReabrir.getFullYear(), dataReabrir.getMonth(), dataReabrir.getDate());
 }
 
 async function salvarExcecao() {
@@ -771,17 +905,44 @@ function abrirModalEventos(ano, mes, dia) {
     if (!modal || !corpo) return;
 
     document.getElementById("modalTitulo").textContent = `Eventos Operacionais: ${new Date(ano, mes, dia).toLocaleDateString('pt-BR', { dateStyle: 'full' })}`;
-    const eventosDoDia = filtrarEventos(coletarEventosDoMes(ano, mes)[dia] || []).filter(ev => vencimentoFocoGlobal === null || ev.vencimentoOriginal === vencimentoFocoGlobal);
-    
-    corpo.innerHTML = eventosDoDia.length ? `<ul class="modal-events-list">${eventosDoDia.map(ev => `
+    eventosModalCache = filtrarEventos(coletarEventosDoMes(ano, mes)[dia] || []).filter(ev => vencimentoFocoGlobal === null || ev.vencimentoOriginal === vencimentoFocoGlobal);
+
+    const editorHtml = `
+        <div id="modalEditorExcecao" class="modal-exception-editor" style="display:none;">
+            <div class="modal-editor-header">
+                <div>
+                    <h4 id="modalEditorTitulo">✏️ Alterar data</h4>
+                    <p>A regra original continua igual. A alteração vale somente para esta ocorrência.</p>
+                </div>
+                <button type="button" class="modal-editor-close" onclick="fecharEditorExcecaoNoModal()">Cancelar</button>
+            </div>
+            <input id="modalExceptionEditingId" type="hidden" value="">
+            <label>Data original</label>
+            <input id="modalExcOriginalDate" type="date" readonly>
+            <label>Evento</label>
+            <input id="modalExcEventTitle" type="text" readonly>
+            <label>Vencimento base</label>
+            <input id="modalExcVencimento" type="text" readonly>
+            <label>Nova data</label>
+            <input id="modalExcNewDate" type="date">
+            <label>Motivo</label>
+            <input id="modalExcMotivo" type="text" placeholder="Ex.: Feriado">
+            <button id="btnSalvarExcecaoModal" type="button" class="admin-primary" onclick="salvarExcecaoDoModal()">Salvar alteração</button>
+            <p id="modalExceptionStatus" class="admin-status"></p>
+        </div>`;
+
+    const listaHtml = eventosModalCache.length ? `<ul class="modal-events-list">${eventosModalCache.map((ev, index) => `
         <li>
             <span class="badge-type ${ev.tipo}">${ev.excecao ? "⚠️ " : ""}${ev.tituloRegra}</span>
             <div class="event-info">
                 <strong>Vencimento base: ${ev.vencimentoOriginal === 'N/A' || ev.vencimentoOriginal === 'Geral' || ev.vencimentoOriginal === 'Bloqueados' ? ev.vencimentoOriginal : 'Dia ' + ev.vencimentoOriginal}</strong> (${labelTempo(ev)})
                 <p>${ev.desc}</p>
+                ${ev.excecao ? `<p class="exception-note">⚠️ ${escapeHTML(ev.motivoExcecao || 'Alterado excepcionalmente')} — original: ${escapeHTML(ev.dataOriginalExcecao || '')}.</p>` : ''}
+                ${ehAdmin ? `<button type="button" class="modal-edit-btn" onclick="abrirEditorExcecaoNoModal(${index})">✏️ ${ev.excecao ? 'Alterar esta exceção' : 'Alterar data excepcionalmente'}</button>` : ''}
             </div>
-        </li>`).join("")}</ul>` : `<p class="no-events">Nenhum evento da régua corresponde aos filtros para este dia.</p>`;
-    
+        </li>`).join('')}</ul>` : `<p class="no-events">Nenhum evento da régua corresponde aos filtros para este dia.</p>`;
+
+    corpo.innerHTML = listaHtml + editorHtml;
     modal.style.display = "flex";
 }
 
