@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendário da Régua de Cobrança - Master</title>
+    <title>Master | Régua de Cobrança</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,11 +15,13 @@
         <div id="infoHoje" class="info-hoje">📅 Hoje é: Carregando...</div>
     </header>
 
+    <!-- Painel de Ações do Dia -->
     <div class="today-actions-panel">
         <h3>⚡ Ações Necessárias para Hoje</h3>
         <div id="todayActionsContent" class="today-actions-body">Carregando ações de hoje...</div>
     </div>
 
+    <!-- Indicadores KPIs -->
     <div class="kpi-panel" id="kpiPanel">
         <div class="kpi-card"><span>🚫</span><div><strong id="kpiBloqueios">0</strong><small>Bloqueios / Assessorias</small></div></div>
         <div class="kpi-card"><span>💬</span><div><strong id="kpiSms">0</strong><small>Disparos de SMS</small></div></div>
@@ -28,6 +30,7 @@
         <div class="kpi-card"><span>📊</span><div><strong id="kpiTotal">0</strong><small>Total de eventos</small></div></div>
     </div>
 
+    <!-- Filtros e Controles -->
     <div class="controls-panel">
         <div class="config-group">
             <label for="selectFiltroVencimento">🎯 Focar Vencimento:</label>
@@ -58,6 +61,7 @@
         </button>
     </div>
 
+    <!-- Barra de Ferramentas / Alternância de Visão -->
     <div class="actions-toolbar">
         <div class="view-tabs">
             <button id="btnCalendario" class="view-tab active" onclick="mudarVisualizacao('calendario')">▦ Calendário</button>
@@ -70,14 +74,18 @@
         </div>
     </div>
 
-    <div class="legend">
-        <span class="legend-item"><span class="dot ante"></span> -10 Dias</span>
-        <span class="legend-item"><span class="dot vencimento"></span> Faturamento / Dia 00</span>
-        <span class="legend-item"><span class="dot pos"></span> Avisos (2-14 Dias)</span>
-        <span class="legend-item"><span class="dot bloqueio"></span> Bloqueio / Assessorias</span>
-        <span class="legend-item"><span class="dot cancelamento"></span> Serasa / Cancelamento</span>
+    <!-- Legenda Unificada das Ações -->
+    <div class="legenda-container">
+        <div class="legenda-item"><span class="legenda-cor ante"></span> -10 Dias</div>
+        <div class="legenda-item"><span class="legenda-cor vencimento"></span> Faturamento / Dia 00</div>
+        <div class="legenda-item"><span class="legenda-cor pos"></span> Avisos (2-14 Dias)</div>
+        <div class="legenda-item"><span class="legenda-cor whatsapp"></span> WhatsApp (D+14)</div>
+        <div class="legenda-item"><span class="legenda-cor bloqueio"></span> Bloqueio / Assessorias</div>
+        <div class="legenda-item"><span class="legenda-cor cancelamento"></span> Serasa / Corte</div>
+        <div class="legenda-item"><span class="legenda-cor relatorio"></span> Relatórios</div>
     </div>
 
+    <!-- Calendário -->
     <div id="calendarView">
         <div class="calendar-grid-header">
             <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
@@ -85,12 +93,15 @@
         <div id="calendarDays" class="calendar-grid"></div>
     </div>
 
+    <!-- Visões Alternativas -->
     <div id="listView" class="alternate-view hidden"></div>
     <div id="timelineView" class="alternate-view hidden"></div>
 </div>
 
+<!-- Container para Impressão -->
 <div id="printReport" class="print-report"></div>
 
+<!-- Modal de Detalhes -->
 <div id="modalDetalhes" class="modal-overlay" onclick="fecharModalFora(event)">
     <div class="modal-content">
         <div class="modal-header">

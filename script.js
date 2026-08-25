@@ -19,7 +19,7 @@ const regrasRegua = [
 // REGRAS DA VISÃO ENXUTA
 // =========================================================================
 const regrasEnxutas = [
-    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "pos", categoria: "fatura", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail." },
+    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "whatsapp", categoria: "fatura", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail."},
     { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", desc: "15 dias após o vencimento - Bloqueio de serviço." }
 ];
 
@@ -154,7 +154,7 @@ function coletarEventosDoMes(ano, mes) {
         // MODO VISÃO ENXUTA (NOVAS REGRAS SOLICITADAS)
         // =========================================================
         
-        // 1. Apaguei demais avisos do vencimento, mantendo apenas WhatsApp (14d) e Bloqueio (15d)
+        // 1. WhatsApp (14d) e Bloqueio (15d) baseados nos vencimentos oficiais
         const competencias = [
             { ano: mes === 0 ? ano - 1 : ano, mes: mes === 0 ? 11 : mes - 1 },
             { ano, mes },
@@ -205,11 +205,31 @@ function coletarEventosDoMes(ano, mes) {
             });
         });
 
-        // 3. Data de Corte (Cancelamento) - Dia 12 de cada mês
+        // 3. Data de Corte (Cancelamento) - Dia 12 de cada mês com CÁLCULO DINÂMICO
         const dataCorte = new Date(ano, mes, 12);
-        const dataRefVenc = new Date(dataCorte);
-        dataRefVenc.setDate(dataRefVenc.getDate() - 90); // ~74.5 dias de bloqueio + 15 dias pós vencimento
-        const mesRefTexto = dataRefVenc.toLocaleDateString('pt-BR', { month: 'long' });
+        
+        // Bloqueio = Vencimento + 15 dias. Corte = Bloqueio + 74.5 dias (89.5 dias totais pós-vencimento)
+        const msPorDia = 24 * 60 * 60 * 1000;
+        const dataLimiteBloqueio = new Date(dataCorte.getTime() - (74.5 * msPorDia));
+        const dataLimiteVencimento = new Date(dataCorte.getTime() - (89.5 * msPorDia));
+
+        const anoRef = dataLimiteVencimento.getFullYear();
+        const mesRef = dataLimiteVencimento.getMonth();
+        const mesRefNome = dataLimiteVencimento.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        const dataLimiteStr = dataLimiteVencimento.toLocaleDateString('pt-BR');
+
+        // Filtrar quais vencimentos oficiais entram na regra de cancelamento neste mês
+        const vencimentosEntrantes = diasFaturamentoOficiais.filter(diaVenc => {
+            const dataVenc = new Date(anoRef, mesRef, diaVenc);
+            return dataVenc <= dataLimiteVencimento;
+        });
+
+        let detalheRegra = "";
+        if (vencimentosEntrantes.length > 0) {
+            detalheRegra = `Vencimentos afetados deste ciclo: dias ${vencimentosEntrantes.join(", ")} de ${mesRefNome} (e todos os anteriores a ${dataLimiteStr}).`;
+        } else {
+            detalheRegra = `Aplica-se a todos os vencimentos até ${dataLimiteStr}.`;
+        }
 
         adicionarEvento(12, {
             vencimentoOriginal: "Bloqueados",
@@ -218,16 +238,16 @@ function coletarEventosDoMes(ano, mes) {
             tituloRegra: "Data de Corte (Cancelamento)",
             tipo: "cancelamento",
             categoria: "cancelamento",
-            desc: `Data de corte para clientes bloqueados há 74.5 dias ou mais (Vencimentos ref. a ${mesRefTexto}).`,
+            desc: `Cancelamento de clientes bloqueados há ≥ 74.5 dias (bloqueio até ${dataLimiteBloqueio.toLocaleDateString('pt-BR')}). ${detalheRegra}`,
             diasOffset: 74.5,
             dataReal: dataCorte
         });
 
-        // 4. Relatórios Semanais
+        // 4. Relatórios Semanais (Segundas, Terças e Sextas)
         const totalDiasMes = new Date(ano, mes + 1, 0).getDate();
         for (let d = 1; d <= totalDiasMes; d++) {
             const dataIterada = new Date(ano, mes, d);
-            const diaSemana = dataIterada.getDay(); // 0 = Dom, 1 = Seg, 2 = Ter, 5 = Sex
+            const diaSemana = dataIterada.getDay();
 
             if (diaSemana === 1) { // Segunda-feira
                 adicionarEvento(d, {
@@ -246,7 +266,7 @@ function coletarEventosDoMes(ano, mes) {
                     vencimentoOriginal: "N/A",
                     competenciaMes: mes + 1,
                     competenciaAno: ano,
-                    tituloRegra: "Relatório Assessorias",
+                    tituloRegra: "Relatórios Assessorias / Diretoria",
                     tipo: "relatorio",
                     categoria: "relatorio",
                     desc: "Toda terça e sexta-feira: Gerar relatório para assessorias (com ranking) e relatório preventivo de inadimplência para diretoria.",
