@@ -1,3 +1,23 @@
+
+/* =========================================================================
+   CONFIGURAÇÃO DO CALENDÁRIO COMPARTILHADO
+   =========================================================================
+   Crie um projeto no Supabase e preencha estes dois valores.
+   A chave "anon" é própria para uso no navegador; a segurança fica nas
+   políticas RLS do banco (arquivo supabase.sql).
+   ========================================================================= 
+   M@sterCobranca26
+   */
+const SUPABASE_URL = "https://uoyhnbjuihovbsdaitnj.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_rbpCapogsFPP3KlUDwFIcw_4ybwnwuJ";
+
+const supabaseClient = (window.supabase && SUPABASE_URL.startsWith("http") && !SUPABASE_ANON_KEY.startsWith("COLE_"))
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+let excecoesCache = [];
+let usuarioAdmin = null;
+let ehAdmin = false;
 // =========================================================================
 // REGRAS OFICIAIS DA RÉGUA DE COBRANÇAS MASTER (LAYOUT COMPLETO)
 // =========================================================================
@@ -31,11 +51,23 @@ let filtroTipoGlobal = "";
 let visualizacaoAtual = "calendario";
 let modoVisaoEnxuta = false; // false = Layout Completo (Original) | true = Visão Enxuta
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     exibirDiaHoje();
     popularSeletoresMesAno();
+    await carregarExcecoes();
     renderizarAcoesHoje();
     renderizarTudo();
+
+    if (supabaseClient) {
+        supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+            usuarioAdmin = session?.user || null;
+            if (usuarioAdmin) await verificarAdmin();
+            else {
+                ehAdmin = false;
+                atualizarBotaoAdmin();
+            }
+        });
+    }
 });
 
 function exibirDiaHoje() {
@@ -107,6 +139,301 @@ function alternarLayout() {
         }
     }
     renderizarTudo();
+}
+
+
+function dataISO(data) {
+    const d = new Date(data);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function eventoCasaComExcecao(ev, exc) {
+    return dataISO(ev.dataReal) === exc.original_date &&
+           String(ev.tituloRegra) === String(exc.event_title) &&
+           (exc.vencimento_original === null || exc.vencimento_original === undefined ||
+            String(ev.vencimentoOriginal) === String(exc.vencimento_original));
+}
+
+async function carregarExcecoes() {
+    if (!supabaseClient) {
+        excecoesCache = [];
+        return;
+    }
+    const { data, error } = await supabaseClient
+        .from("excecoes_calendario")
+        .select("*")
+        .eq("ativo", true)
+        .order("original_date", { ascending: true });
+
+    if (error) {
+        console.error("Erro ao carregar exceções:", error);
+        excecoesCache = [];
+        return;
+    }
+    excecoesCache = data || [];
+}
+
+function aplicarExcecoesAoMapa(mapa, ano, mes) {
+    if (!excecoesCache.length) return mapa;
+
+    // 1) Remove/move eventos cuja data original pertence a este mês.
+    Object.keys(mapa).forEach(dia => {
+        const novos = [];
+        mapa[dia].forEach(ev => {
+            const exc = excecoesCache.find(e => eventoCasaComExcecao(ev, e));
+            if (!exc) {
+                novos.push(ev);
+                return;
+            }
+
+            const novaData = new Date(`${exc.new_date}T12:00:00`);
+            if (novaData.getFullYear() === ano && novaData.getMonth() === mes) {
+                ev.dataReal = novaData;
+                ev.excecao = true;
+                ev.motivoExcecao = exc.motivo;
+                ev.dataOriginalExcecao = exc.original_date;
+                ev.idExcecao = exc.id;
+                if (!mapa[novaData.getDate()]) mapa[novaData.getDate()] = [];
+                mapa[novaData.getDate()].push(ev);
+            }
+            // Se a nova data for outro mês, o evento simplesmente não aparece neste mês.
+        });
+        mapa[dia] = novos;
+    });
+
+    // 2) Se uma exceção trouxe um evento de outro mês para este mês,
+    // recria uma representação do evento no novo dia.
+    excecoesCache.forEach(exc => {
+        const novaData = new Date(`${exc.new_date}T12:00:00`);
+        const originalData = new Date(`${exc.original_date}T12:00:00`);
+        if (novaData.getFullYear() !== ano || novaData.getMonth() !== mes) return;
+        if (originalData.getFullYear() === ano && originalData.getMonth() === mes) return;
+
+        const regra = regrasRegua.find(r => r.titulo === exc.event_title) ||
+                      regrasEnxutas.find(r => r.titulo === exc.event_title);
+
+        const ev = {
+            vencimentoOriginal: exc.vencimento_original ?? "Exceção",
+            competenciaMes: originalData.getMonth() + 1,
+            competenciaAno: originalData.getFullYear(),
+            tituloRegra: exc.event_title,
+            tipo: exc.tipo || regra?.tipo || "bloqueio",
+            categoria: exc.categoria || regra?.categoria || "bloqueio",
+            desc: (exc.descricao || regra?.desc || "Evento alterado por exceção.") +
+                  ` ⚠️ Alterado excepcionalmente: ${exc.motivo}. Data original: ${originalData.toLocaleDateString("pt-BR")}.`,
+            diasOffset: regra?.dias ?? 0,
+            dataReal: novaData,
+            excecao: true,
+            motivoExcecao: exc.motivo,
+            dataOriginalExcecao: exc.original_date,
+            idExcecao: exc.id
+        };
+
+        if (!mapa[novaData.getDate()]) mapa[novaData.getDate()] = [];
+        // Evita duplicar caso já exista.
+        const duplicado = mapa[novaData.getDate()].some(x => x.idExcecao === exc.id);
+        if (!duplicado) mapa[novaData.getDate()].push(ev);
+    });
+
+    return mapa;
+}
+
+function abrirLoginAdmin() {
+    if (ehAdmin) {
+        carregarExcecoes().then(() => {
+            document.getElementById("modalAdmin").style.display = "flex";
+            document.getElementById("adminUserLabel").textContent = `Logado como ${usuarioAdmin.email}`;
+            renderizarAdmin();
+        });
+    } else {
+        document.getElementById("modalLoginAdmin").style.display = "flex";
+        document.getElementById("loginAdminStatus").textContent = "";
+    }
+}
+
+function fecharLoginAdmin() {
+    document.getElementById("modalLoginAdmin").style.display = "none";
+}
+
+function fecharAdmin() {
+    document.getElementById("modalAdmin").style.display = "none";
+}
+
+async function loginAdmin() {
+    if (!supabaseClient) {
+        document.getElementById("loginAdminStatus").textContent = "Configure o Supabase no script.js antes de usar o acesso administrativo.";
+        return;
+    }
+
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = document.getElementById("adminPassword").value;
+    const status = document.getElementById("loginAdminStatus");
+    status.textContent = "Entrando...";
+
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+        status.textContent = "Não foi possível entrar. Confira e-mail e senha.";
+        return;
+    }
+
+    usuarioAdmin = data.user;
+    const ok = await verificarAdmin();
+    if (!ok) {
+        await supabaseClient.auth.signOut();
+        status.textContent = "Este usuário não possui permissão administrativa.";
+        return;
+    }
+
+    fecharLoginAdmin();
+    document.getElementById("adminUserLabel").textContent = `Logado como ${usuarioAdmin.email}`;
+    document.getElementById("modalAdmin").style.display = "flex";
+    await carregarExcecoes();
+    renderizarAdmin();
+}
+
+async function verificarAdmin() {
+    if (!supabaseClient || !usuarioAdmin) return false;
+    const { data, error } = await supabaseClient
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", usuarioAdmin.id)
+        .maybeSingle();
+
+    ehAdmin = !error && !!data;
+    atualizarBotaoAdmin();
+    return ehAdmin;
+}
+
+function atualizarBotaoAdmin() {
+    const btn = document.getElementById("btnAdmin");
+    if (btn) btn.textContent = ehAdmin ? "⚙️ Administração" : "🔐 Administração";
+}
+
+async function logoutAdmin() {
+    if (supabaseClient) await supabaseClient.auth.signOut();
+    usuarioAdmin = null;
+    ehAdmin = false;
+    fecharAdmin();
+    atualizarBotaoAdmin();
+}
+
+async function salvarExcecao() {
+    const status = document.getElementById("exceptionStatus");
+    if (!supabaseClient || !ehAdmin) {
+        status.textContent = "Acesso administrativo não configurado.";
+        return;
+    }
+
+    const original = document.getElementById("excOriginalDate").value;
+    const titulo = document.getElementById("excEventTitle").value.trim();
+    const venc = document.getElementById("excVencimento").value.trim() || null;
+    const nova = document.getElementById("excNewDate").value;
+    const motivo = document.getElementById("excMotivo").value.trim();
+
+    if (!original || !titulo || !nova || !motivo) {
+        status.textContent = "Preencha data original, evento, nova data e motivo.";
+        return;
+    }
+
+    const eventoRef = regrasRegua.find(r => r.titulo === titulo) ||
+                      regrasEnxutas.find(r => r.titulo === titulo);
+
+    const payload = {
+        original_date: original,
+        new_date: nova,
+        event_title: titulo,
+        vencimento_original: venc,
+        tipo: eventoRef?.tipo || "bloqueio",
+        categoria: eventoRef?.categoria || "bloqueio",
+        descricao: eventoRef?.desc || null,
+        motivo,
+        ativo: true,
+        created_by: usuarioAdmin.id
+    };
+
+    status.textContent = "Salvando...";
+    const { error } = await supabaseClient.from("excecoes_calendario").insert(payload);
+
+    if (error) {
+        console.error(error);
+        status.textContent = "Erro ao salvar a exceção.";
+        return;
+    }
+
+    status.textContent = "Exceção salva. Atualizando calendário...";
+    await carregarExcecoes();
+    renderizarTudo();
+    renderizarAdmin();
+    setTimeout(() => status.textContent = "", 2500);
+}
+
+async function excluirExcecao(id) {
+    if (!supabaseClient || !ehAdmin) return;
+    if (!confirm("Excluir esta exceção? O evento voltará à regra original.")) return;
+
+    const { error } = await supabaseClient
+        .from("excecoes_calendario")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        alert("Não foi possível excluir a exceção.");
+        return;
+    }
+
+    await carregarExcecoes();
+    renderizarTudo();
+    renderizarAdmin();
+}
+
+function escapeHTML(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+    }[c]));
+}
+
+function renderizarAdmin() {
+    const lista = document.getElementById("exceptionList");
+    const audit = document.getElementById("auditList");
+    if (!lista || !audit) return;
+
+    lista.innerHTML = excecoesCache.length ? excecoesCache.map(e => `
+        <div class="admin-row">
+            <div>
+                <strong>${escapeHTML(e.event_title)}</strong>
+                <span>${escapeHTML(e.original_date)} → <b>${escapeHTML(e.new_date)}</b></span>
+                <small>${escapeHTML(e.motivo)}</small>
+            </div>
+            <button class="danger-btn" onclick="excluirExcecao('${e.id}')">Excluir</button>
+        </div>
+    `).join("") : `<p class="admin-empty">Nenhuma exceção cadastrada.</p>`;
+
+    carregarHistorico();
+}
+
+async function carregarHistorico() {
+    if (!supabaseClient || !ehAdmin) return;
+    const audit = document.getElementById("auditList");
+    const { data, error } = await supabaseClient
+        .from("historico_alteracoes")
+        .select("id, acao, created_at, detalhes")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+    if (error) {
+        audit.innerHTML = `<p class="admin-empty">Não foi possível carregar o histórico.</p>`;
+        return;
+    }
+
+    audit.innerHTML = data?.length ? data.map(h => `
+        <div class="admin-row history-row">
+            <div>
+                <strong>${escapeHTML(h.acao)}</strong>
+                <span>${new Date(h.created_at).toLocaleString("pt-BR")}</span>
+                <small>${escapeHTML(h.detalhes || "")}</small>
+            </div>
+        </div>
+    `).join("") : `<p class="admin-empty">Nenhuma alteração registrada.</p>`;
 }
 
 function coletarEventosDoMes(ano, mes) {
@@ -277,7 +604,7 @@ function coletarEventosDoMes(ano, mes) {
         }
     }
 
-    return mapaEventos;
+    return aplicarExcecoesAoMapa(mapaEventos, ano, mes);
 }
 
 function eventoVisivel(ev) {
@@ -315,7 +642,7 @@ function renderizarAcoesHoje() {
     
     containerHoje.innerHTML = `<div class="today-actions-list">${eventosHoje.map(ev => `
         <div class="today-action-item">
-            <span class="badge-type ${ev.tipo}">${ev.tituloRegra}</span>
+            <span class="badge-type ${ev.tipo}">${ev.excecao ? "⚠️ " : ""}${ev.tituloRegra}</span>
             <div class="today-action-text">
                 <strong>Vencimento base: ${ev.vencimentoOriginal === 'N/A' || ev.vencimentoOriginal === 'Geral' || ev.vencimentoOriginal === 'Bloqueados' ? ev.vencimentoOriginal : 'Dia ' + ev.vencimentoOriginal}</strong> (${labelTempo(ev)}) - ${ev.desc}
             </div>
@@ -354,7 +681,7 @@ function renderizarCalendario() {
         let bolinhasHtml = `<div class="event-dots-container">`;
         eventosDoDia.slice(0, 6).forEach(ev => {
             const destaque = vencimentoFocoGlobal !== null && ev.vencimentoOriginal === vencimentoFocoGlobal ? " dot-highlight" : "";
-            bolinhasHtml += `<span class="event-dot ${ev.tipo}${destaque}" title="${ev.vencimentoOriginal !== 'N/A' ? 'Venc. ' + ev.vencimentoOriginal + ': ' : ''}${ev.tituloRegra}"></span>`;
+            bolinhasHtml += `<span class="event-dot ${ev.tipo}${destaque}" title="${ev.vencimentoOriginal !== 'N/A' ? 'Venc. ' + ev.vencimentoOriginal + ': ' : ''}${ev.tituloRegra}${ev.excecao ? ' ⚠️ Alterado: ' + ev.motivoExcecao : ''}"></span>`;
         });
         if (eventosDoDia.length > 6) bolinhasHtml += `<span class="more-dots">+${eventosDoDia.length - 6}</span>`;
         bolinhasHtml += `</div>`;
@@ -414,7 +741,7 @@ function renderizarVisualizacaoAlternativa() {
                 <strong>${ev.dataReal.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})}</strong>
                 <small>${labelTempo(ev)}</small>
             </div>
-            <span class="badge-type ${ev.tipo}">${ev.tituloRegra}</span>
+            <span class="badge-type ${ev.tipo}">${ev.excecao ? "⚠️ " : ""}${ev.tituloRegra}</span>
             <div class="event-info">
                 <strong>Vencimento base: ${ev.vencimentoOriginal === 'N/A' || ev.vencimentoOriginal === 'Geral' || ev.vencimentoOriginal === 'Bloqueados' ? ev.vencimentoOriginal : 'Dia ' + ev.vencimentoOriginal}</strong>
                 <p>${ev.desc}</p>
@@ -448,7 +775,7 @@ function abrirModalEventos(ano, mes, dia) {
     
     corpo.innerHTML = eventosDoDia.length ? `<ul class="modal-events-list">${eventosDoDia.map(ev => `
         <li>
-            <span class="badge-type ${ev.tipo}">${ev.tituloRegra}</span>
+            <span class="badge-type ${ev.tipo}">${ev.excecao ? "⚠️ " : ""}${ev.tituloRegra}</span>
             <div class="event-info">
                 <strong>Vencimento base: ${ev.vencimentoOriginal === 'N/A' || ev.vencimentoOriginal === 'Geral' || ev.vencimentoOriginal === 'Bloqueados' ? ev.vencimentoOriginal : 'Dia ' + ev.vencimentoOriginal}</strong> (${labelTempo(ev)})
                 <p>${ev.desc}</p>

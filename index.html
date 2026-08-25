@@ -59,6 +59,7 @@
         <button id="btnToggleLayout" class="btn-toggle-layout" onclick="alternarLayout()">
             📋 Modo Atual: <strong>Layout Completo</strong> (Clique p/ Enxuta)
         </button>
+        <button id="btnAdmin" class="btn-admin" onclick="abrirLoginAdmin()">🔐 Administração</button>
     </div>
 
     <!-- Barra de Ferramentas / Alternância de Visão -->
@@ -112,6 +113,73 @@
     </div>
 </div>
 
+<!-- Modal de Login Administrativo -->
+<div id="modalLoginAdmin" class="modal-overlay">
+    <div class="modal-content admin-modal">
+        <div class="modal-header">
+            <h3>🔐 Acesso administrativo</h3>
+            <button class="modal-close" onclick="fecharLoginAdmin()">X</button>
+        </div>
+        <div class="modal-body">
+            <p class="admin-help">Somente usuários cadastrados como administradores podem criar ou alterar exceções.</p>
+            <label>E-mail</label>
+            <input id="adminEmail" type="email" autocomplete="username" placeholder="seu@email.com">
+            <label>Senha</label>
+            <input id="adminPassword" type="password" autocomplete="current-password" placeholder="••••••••">
+            <button class="admin-primary" onclick="loginAdmin()">Entrar</button>
+            <p id="loginAdminStatus" class="admin-status"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Painel Administrativo -->
+<div id="modalAdmin" class="modal-overlay">
+    <div class="modal-content admin-modal admin-wide">
+        <div class="modal-header">
+            <h3>⚙️ Exceções do calendário</h3>
+            <button class="modal-close" onclick="fecharAdmin()">X</button>
+        </div>
+        <div class="modal-body">
+            <div class="admin-session">
+                <span id="adminUserLabel"></span>
+                <button class="admin-secondary" onclick="logoutAdmin()">Sair</button>
+            </div>
+
+            <div class="exception-form">
+                <h4>➕ Nova exceção</h4>
+                <p class="admin-help">A regra original continua igual. Esta alteração vale somente para esta ocorrência.</p>
+                <label>Data do evento original</label>
+                <input id="excOriginalDate" type="date">
+                <label>Evento</label>
+                <input id="excEventTitle" type="text" placeholder="Ex.: Bloqueio">
+                <label>Vencimento base (opcional)</label>
+                <input id="excVencimento" type="text" placeholder="Ex.: 15">
+                <label>Nova data</label>
+                <input id="excNewDate" type="date">
+                <label>Motivo</label>
+                <input id="excMotivo" type="text" placeholder="Ex.: Feriado">
+                <button class="admin-primary" onclick="salvarExcecao()">Salvar exceção</button>
+                <p id="exceptionStatus" class="admin-status"></p>
+            </div>
+
+            <div class="exception-history">
+                <div class="admin-section-title">
+                    <h4>📋 Exceções cadastradas</h4>
+                    <button class="admin-secondary" onclick="carregarExcecoes()">Atualizar</button>
+                </div>
+                <div id="exceptionList">Carregando...</div>
+            </div>
+
+            <div class="exception-history">
+                <div class="admin-section-title"><h4>🕘 Histórico de alterações</h4></div>
+                <div id="auditList">Carregando...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Supabase: o código usa apenas a chave pública (anon). RLS protege os dados. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="script.js"></script>
 </body>
 </html>
