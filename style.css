@@ -474,3 +474,85 @@ p.subtitle {
     .print-report th { background:#eee; }
     @page { size:A4 landscape; margin:12mm; }
 }
+
+/* Botão de Alternância de Layout */
+.btn-toggle-layout {
+    background-color: #2c3e50;
+    color: #ffffff;
+    border: 2px solid #34495e;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-toggle-layout:hover {
+    background-color: #1a252f;
+    border-color: #2c3e50;
+}
+
+/* Estado Ativo do Modo Enxuto */
+.btn-toggle-layout.enxuto-active {
+    background-color: #d35400;
+    border-color: #e67e22;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(230, 126, 34, 0.4);
+}
+
+.btn-toggle-layout.enxuto-active:hover {
+    background-color: #b9770e;
+}
+
+/* Badges e Cores de Relatórios e Faturamentos */
+.badge-type.relatorio,
+.event-dot.relatorio {
+    background-color: #f39c12;
+    color: #ffffff;
+}
+
+.badge-type.vencimento,
+.event-dot.vencimento {
+    background-color: #2980b9;
+    color: #ffffff;
+}
+
+.day-header-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.indicators-wrapper {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.venc-indicator {
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background-color: #7f8c8d;
+    color: #fff;
+    line-height: 1;
+}
+
+.venc-indicator.principal {
+    background-color: #27ae60;
+}
+
+.venc-indicator.fat {
+    background-color: #2980b9;
+}
+
+.venc-indicator.corte {
+    background-color: #8e44ad;
+}

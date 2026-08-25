@@ -41,18 +41,21 @@
         <div class="config-group">
             <label for="selectFiltroTipo">🔎 Filtrar Evento:</label>
             <select id="selectFiltroTipo" onchange="mudarFiltroTipo()">
-                <option value="">Todos os eventos</option>
-                <option value="bloqueio">🚫 Bloqueios / Assessorias</option>
-                <option value="cancelamento">⚠️ Serasa / Cancelamento</option>
-                <option value="sms">💬 SMS</option>
-                <option value="fatura">📄 Faturas / E-mails</option>
-                <option value="vencimento">💰 Faturamento</option>
+                <option value="">Todos os tipos</option>
+                <option value="fatura">Faturas / E-mails / Faturamentos</option>
+                <option value="bloqueio">Bloqueios</option>
+                <option value="sms">SMS</option>
+                <option value="cancelamento">Cancelamento / Serasa / Corte</option>
+                <option value="relatorio">Relatórios Operacionais</option>
             </select>
         </div>
         <div class="date-selectors">
             <select id="selectMes" onchange="mudarMesAno()"></select>
             <select id="selectAno" onchange="mudarMesAno()"></select>
         </div>
+        <button id="btnToggleLayout" class="btn-toggle-layout" onclick="alternarLayout()">
+            📋 Modo Atual: <strong>Layout Completo</strong> (Clique p/ Enxuta)
+        </button>
     </div>
 
     <div class="actions-toolbar">
