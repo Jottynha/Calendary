@@ -123,6 +123,7 @@ const catalogoDashboardEnxuto = catalogoAcoes.filter(a => ["whatsapp_14","bloque
 let dataAtual = new Date();
 let vencimentoFocoGlobal = null;
 let filtroTipoGlobal = "";
+let filtroAcaoGlobal = null;
 let visualizacaoAtual = "calendario";
 let modoVisaoEnxuta = false; // false = Layout Completo (Original) | true = Visão Enxuta
 
@@ -155,7 +156,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // enquanto a página estiver aberta no navegador. O sistema não depende de
 // um servidor próprio para disparar o aviso.
 const CHAVE_NOTIFICACAO_DIA = "reguaCobranca_notificacaoDia";
-const INTERVALO_NOTIFICACAO_MS = 60 * 60 * 1000;
+const INTERVALO_NOTIFICACAO_MS = 60 * 1000;
 let ultimoDiaNotificado = null;
 let timerNotificacoes = null;
 
@@ -1010,8 +1011,29 @@ function coletarEventosDoMes(ano, mes) {
     return aplicarExcecoesAoMapa(mapaEventos, ano, mes);
 }
 
+function filtrarPorAcaoDashboard(actionKey) {
+    if (!actionKey) return;
+
+    // Clicar novamente na mesma ação remove o filtro
+    if (filtroAcaoGlobal === actionKey) {
+        filtroAcaoGlobal = null;
+    } else {
+        filtroAcaoGlobal = actionKey;
+    }
+
+    renderizarTudo();
+}
+
 function eventoVisivel(ev) {
-    return !filtroTipoGlobal || ev.categoria === filtroTipoGlobal;
+    const passaTipo =
+        !filtroTipoGlobal ||
+        ev.categoria === filtroTipoGlobal;
+
+    const passaAcao =
+        !filtroAcaoGlobal ||
+        (ev.actionKey || ev.tituloRegra) === filtroAcaoGlobal;
+
+    return passaTipo && passaAcao;
 }
 
 function filtrarEventos(eventos) {
@@ -1059,6 +1081,33 @@ function labelTempo(ev) {
 }
 
 function renderizarCalendario() {
+    const indicador = document.getElementById("dashboardActionFilter");
+    if (indicador) {
+        if (filtroAcaoGlobal) {
+            const acao = catalogoAcoes.find(
+                a => a.actionKey === filtroAcaoGlobal
+            );
+
+            indicador.innerHTML = `
+                <span>
+                    🔎 Filtrando por:
+                    <strong>${escapeHTML(acao?.titulo || filtroAcaoGlobal)}</strong>
+                </span>
+
+                <button
+                    type="button"
+                    onclick="limparFiltroAcaoDashboard()"
+                >
+                    Limpar filtro
+                </button>
+            `;
+
+            indicador.classList.remove("hidden");
+        } else {
+            indicador.classList.add("hidden");
+            indicador.innerHTML = "";
+        }
+    }
     const grid = document.getElementById("calendarDays");
     if (!grid) return;
 
@@ -1077,14 +1126,90 @@ function renderizarCalendario() {
     for (let dia = 1; dia <= totalDiasMes; dia++) {
         const dataIterada = new Date(ano, mes, dia);
         const eventosDoDia = eventosDoMes[dia] || [];
-        let classesExtras = dataIterada.toDateString() === hojeStr ? " hoje" : "";
-        let focado = vencimentoFocoGlobal === null || dia === vencimentoFocoGlobal || eventosDoDia.some(ev => ev.vencimentoOriginal === vencimentoFocoGlobal);
-        if (vencimentoFocoGlobal !== null) classesExtras += focado ? " focused" : " unfocused";
+        let classesExtras =
+    dataIterada.toDateString() === hojeStr
+        ? " hoje"
+        : "";
+
+        // =========================================================
+        // FOCO POR VENCIMENTO
+        // =========================================================
+
+        const focoVencimentoAtivo =
+            vencimentoFocoGlobal !== null;
+
+        const diaTemVencimentoFocado =
+            focoVencimentoAtivo &&
+            (
+                dia === vencimentoFocoGlobal ||
+                eventosDoDia.some(
+                    ev => ev.vencimentoOriginal === vencimentoFocoGlobal
+                )
+            );
+
+        // =========================================================
+        // FOCO POR AÇÃO DO DASHBOARD
+        // =========================================================
+
+        const focoAcaoAtivo =
+            !!filtroAcaoGlobal;
+
+        const diaTemAcaoFocada =
+            focoAcaoAtivo &&
+            eventosDoDia.some(
+                ev =>
+                    (ev.actionKey || ev.tituloRegra) ===
+                    filtroAcaoGlobal
+            );
+
+        // =========================================================
+        // APLICAÇÃO DO FOCO
+        // =========================================================
+
+        const algumFocoAtivo =
+            focoVencimentoAtivo ||
+            focoAcaoAtivo;
+
+        const diaTemFoco =
+            (!focoVencimentoAtivo || diaTemVencimentoFocado) &&
+            (!focoAcaoAtivo || diaTemAcaoFocada);
+
+        if (algumFocoAtivo) {
+            classesExtras += diaTemFoco
+                ? " focused"
+                : " unfocused";
+        }
 
         let bolinhasHtml = `<div class="event-dots-container">`;
         eventosDoDia.slice(0, 6).forEach(ev => {
-            const destaque = vencimentoFocoGlobal !== null && ev.vencimentoOriginal === vencimentoFocoGlobal ? " dot-highlight" : "";
-            bolinhasHtml += `<span class="event-dot ${ev.tipo}${destaque}" title="${ev.vencimentoOriginal !== 'N/A' ? 'Venc. ' + ev.vencimentoOriginal + ': ' : ''}${ev.tituloRegra}${ev.excecao ? ' ⚠️ Alterado: ' + ev.motivoExcecao : ''}"></span>`;
+
+    const destaqueVencimento =
+        focoVencimentoAtivo &&
+        ev.vencimentoOriginal === vencimentoFocoGlobal;
+
+    const destaqueAcao =
+        focoAcaoAtivo &&
+        (ev.actionKey || ev.tituloRegra) === filtroAcaoGlobal;
+
+    const destaque =
+        destaqueVencimento || destaqueAcao
+            ? " dot-highlight"
+            : "";
+
+            bolinhasHtml += `
+                <span
+                    class="event-dot ${ev.tipo}${destaque}"
+                    title="${
+                        ev.vencimentoOriginal !== 'N/A'
+                            ? 'Venc. ' + ev.vencimentoOriginal + ': '
+                            : ''
+                    }${ev.tituloRegra}${
+                        ev.excecao
+                            ? ' ⚠️ Alterado: ' + ev.motivoExcecao
+                            : ''
+                    }"
+                ></span>
+            `;
         });
         if (eventosDoDia.length > 6) bolinhasHtml += `<span class="more-dots">+${eventosDoDia.length - 6}</span>`;
         bolinhasHtml += `</div>`;
@@ -1177,7 +1302,11 @@ function atualizarKPIs() {
         const descricaoDashboard = acao.actionKey === "whatsapp_14"
             ? "D+14 • somente vencimentos 10, 15 e 20."
             : acao.descricao;
-        return `<div class="kpi-card action-kpi ${quantidade ? "has-events" : "is-zero"}">
+        return `<div
+                    class="kpi-card action-kpi ${quantidade ? "has-events" : "is-zero"} ${filtroAcaoGlobal === acao.actionKey ? "dashboard-selected" : ""}"
+                    onclick="filtrarPorAcaoDashboard('${acao.actionKey}')"
+                    title="${filtroAcaoGlobal === acao.actionKey ? "Clique para remover este filtro" : "Clique para filtrar o calendário por esta ação"}"
+                >
             <span class="kpi-icon ${classe}">${icones[acao.grupo] || "•"}</span>
             <div class="kpi-card-content"><strong>${quantidade}</strong><small>${escapeHTML(acao.titulo)}</small><em>${escapeHTML(descricaoDashboard)}</em></div>
         </div>`;
@@ -1263,3 +1392,7 @@ function exportarPDF() {
 
 function fecharModal() { const modal = document.getElementById("modalDetalhes"); if (modal) modal.style.display = "none"; }
 function fecharModalFora(event) { if (event.target === document.getElementById("modalDetalhes")) fecharModal(); }
+function limparFiltroAcaoDashboard() {
+    filtroAcaoGlobal = null;
+    renderizarTudo();
+}
