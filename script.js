@@ -28,7 +28,7 @@ const regrasRegua = [
     { dias: 2, titulo: "SMS de Aviso", tipo: "pos", categoria: "sms", actionKey: "sms_2", desc: "02 dias após o vencimento - Disparo de SMS." },
     { dias: 4, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", actionKey: "email_4", desc: "04 dias após o vencimento - PDF por E-mail." },
     { dias: 10, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", actionKey: "email_10", desc: "10 dias após o vencimento - PDF por E-mail." },
-    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "pos", categoria: "fatura", actionKey: "whatsapp_14", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail." },
+    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "pos", categoria: "fatura", actionKey: "whatsapp_14", vencimentosPermitidos: [10, 15, 20], desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail. Somente para vencimentos 10, 15 e 20." },
     { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", actionKey: "bloqueio_15", desc: "Bloqueio de serviço (Fibra, Outros, Wireless e Parcial MVNO)." },
     { dias: 18, titulo: "Assessorias", tipo: "bloqueio", categoria: "bloqueio", actionKey: "assessorias_18", desc: "Encaminhamento automático para as Assessorias Externas." },
     { dias: 30, titulo: "Serasa", tipo: "cancelamento", categoria: "cancelamento", actionKey: "serasa_30", desc: "Inclusão das mensalidades negativadas no Serasa." },
@@ -40,11 +40,12 @@ const regrasRegua = [
 // REGRAS DA VISÃO ENXUTA
 // =========================================================================
 const regrasEnxutas = [
-    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "whatsapp", categoria: "fatura", actionKey: "whatsapp_14", desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail."},
+    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "whatsapp", categoria: "fatura", actionKey: "whatsapp_14", vencimentosPermitidos: [10, 15, 20], desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail. Somente para vencimentos 10, 15 e 20."},
     { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", actionKey: "bloqueio_15", desc: "15 dias após o vencimento - Bloqueio de serviço." }
 ];
 
 const diasFaturamentoOficiais = [5, 8, 10, 12, 14, 15, 20, 25, 26];
+
 const catalogoAcoes = [
     { actionKey: "pdf_antes", titulo: "PDF E-mail", grupo: "ante", categoria: "fatura", tipoEvento: "ante", descricao: "10 dias antes do vencimento." },
     { actionKey: "fatura_dia", titulo: "Envio de Fatura", grupo: "vencimento", categoria: "fatura", tipoEvento: "vencimento", descricao: "No dia do vencimento." },
@@ -114,7 +115,8 @@ function sincronizarTipoComEvento() {
     }
 }
 
-const catalogoDashboardCompleto = catalogoAcoes.filter(a => !["fat_normal","fat_b2b","fat_pos16","corte_12","relatorio_b2b","relatorio_assessorias"].includes(a.actionKey));
+const acoesDashboardCompleto = ["pdf_antes","fatura_dia","sms_2","email_4","email_10","whatsapp_14","bloqueio_15","assessorias_18","serasa_30","cancelamento_745","desativacao_75"];
+const catalogoDashboardCompleto = acoesDashboardCompleto.map(key => catalogoAcoes.find(a => a.actionKey === key)).filter(Boolean);
 const catalogoDashboardEnxuto = catalogoAcoes.filter(a => ["whatsapp_14","bloqueio_15","fat_normal","fat_b2b","fat_pos16","corte_12","relatorio_b2b","relatorio_assessorias"].includes(a.actionKey));
 
 
@@ -130,6 +132,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await carregarExcecoes();
     renderizarAcoesHoje();
     renderizarTudo();
+    inicializarNotificacoes();
 
     if (supabaseClient) {
         supabaseClient.auth.onAuthStateChange(async (_event, session) => {
@@ -142,6 +145,152 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 });
+
+
+// =========================================================================
+// NOTIFICAÇÕES NATIVAS DO NAVEGADOR
+// =========================================================================
+// A Notification API só funciona depois que o usuário concede permissão.
+// Como o projeto está no GitHub Pages, as notificações são garantidas
+// enquanto a página estiver aberta no navegador. O sistema não depende de
+// um servidor próprio para disparar o aviso.
+const CHAVE_NOTIFICACAO_DIA = "reguaCobranca_notificacaoDia";
+const INTERVALO_NOTIFICACAO_MS = 60 * 1000;
+let ultimoDiaNotificado = null;
+let timerNotificacoes = null;
+
+function dataLocalISO(data = new Date()) {
+    const y = data.getFullYear();
+    const m = String(data.getMonth() + 1).padStart(2, "0");
+    const d = String(data.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
+function formatarNumero(n) {
+    return Number(n || 0).toLocaleString("pt-BR");
+}
+
+function obterResumoTarefasHoje() {
+    const hoje = new Date();
+    const eventos = coletarEventosDoMes(hoje.getFullYear(), hoje.getMonth())[hoje.getDate()] || [];
+    const filtrados = filtrarEventos(eventos).filter(ev => vencimentoFocoGlobal === null || ev.vencimentoOriginal === vencimentoFocoGlobal);
+    const mapa = new Map();
+
+    filtrados.forEach(ev => {
+        const key = ev.actionKey || ev.tituloRegra;
+        if (!mapa.has(key)) mapa.set(key, { titulo: ev.tituloRegra, quantidade: 0, eventos: [] });
+        const item = mapa.get(key);
+        item.quantidade += 1;
+        item.eventos.push(ev);
+    });
+
+    const acoes = Array.from(mapa.values()).sort((a, b) => b.quantidade - a.quantidade);
+    const excecoes = filtrados.filter(ev => ev.excecao);
+    return { hoje, filtrados, acoes, excecoes };
+}
+
+function atualizarStatusNotificacoes() {
+    const btn = document.getElementById("btnNotificacoes");
+    const status = document.getElementById("notificationStatus");
+    if (!btn) return;
+
+    if (!("Notification" in window)) {
+        btn.textContent = "🔕 Notificações indisponíveis";
+        btn.disabled = true;
+        if (status) status.textContent = "Seu navegador não oferece notificações nativas.";
+        return;
+    }
+
+    if (Notification.permission === "granted") {
+        btn.textContent = "🔔 Notificações ativadas";
+        btn.classList.add("notification-active");
+        if (status) status.textContent = "Avisos de tarefas de hoje ativos.";
+    } else if (Notification.permission === "denied") {
+        btn.textContent = "🔕 Notificações bloqueadas";
+        btn.classList.remove("notification-active");
+        if (status) status.textContent = "Permita notificações nas configurações do navegador.";
+    } else {
+        btn.textContent = "🔔 Ativar notificações";
+        btn.classList.remove("notification-active");
+        if (status) status.textContent = "";
+    }
+}
+
+async function solicitarNotificacoes() {
+    if (!("Notification" in window)) {
+        atualizarStatusNotificacoes();
+        return;
+    }
+
+    try {
+        const permissao = await Notification.requestPermission();
+        atualizarStatusNotificacoes();
+        if (permissao === "granted") {
+            // Notifica imediatamente após a autorização para o usuário confirmar
+            // que a funcionalidade está funcionando.
+            notificarTarefasHoje(true);
+            if (!timerNotificacoes) {
+                timerNotificacoes = setInterval(() => notificarTarefasHoje(false), INTERVALO_NOTIFICACAO_MS);
+            }
+        }
+    } catch (erro) {
+        console.error("Não foi possível solicitar permissão de notificação:", erro);
+    }
+}
+
+function inicializarNotificacoes() {
+    atualizarStatusNotificacoes();
+    if (!("Notification" in window)) return;
+
+    // O aviso é verificado enquanto o Pages estiver aberto.
+    if (Notification.permission === "granted") {
+        setTimeout(() => notificarTarefasHoje(false), 1500);
+        timerNotificacoes = setInterval(() => notificarTarefasHoje(false), INTERVALO_NOTIFICACAO_MS);
+    }
+}
+
+function notificarTarefasHoje(forcar = false) {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+    const { hoje, filtrados, acoes, excecoes } = obterResumoTarefasHoje();
+    if (!filtrados.length) return;
+
+    //const chaveHoje = dataLocalISO(hoje);
+    //const ultimoSalvo = localStorage.getItem(CHAVE_NOTIFICACAO_DIA);
+    //if (!forcar && ultimoSalvo === chaveHoje) return;
+
+    const dataFormatada = hoje.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const principais = acoes.slice(0, 4).map(a => `${a.quantidade} ${a.titulo}`).join(" • ");
+    const extra = acoes.length > 4 ? ` • +${acoes.length - 4} tipos` : "";
+
+    const titulo = excecoes.length
+        ? `⚠️ Régua de Cobrança — ${excecoes.length} exceção(ões)`
+        : `🔔 Régua de Cobrança — tarefas de hoje`;
+
+    const corpo = `📅 ${dataFormatada}\n${principais}${extra}\nTotal: ${formatarNumero(filtrados.length)} ações`;
+
+    try {
+        const notificacao = new Notification(titulo, {
+            body: corpo,
+            icon: "icon-192.png",
+            badge: "icon-32.png",
+            tag: "regua-cobranca-tarefas-hoje",
+            renotify: true
+        });
+
+        notificacao.onclick = () => {
+            window.focus();
+            notificacao.close();
+            const painel = document.querySelector(".today-actions-panel");
+            if (painel) painel.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+
+        localStorage.setItem(CHAVE_NOTIFICACAO_DIA, chaveHoje);
+        ultimoDiaNotificado = chaveHoje;
+    } catch (erro) {
+        console.error("Erro ao criar notificação nativa:", erro);
+    }
+}
 
 function exibirDiaHoje() {
     const el = document.getElementById("infoHoje");
@@ -700,6 +849,7 @@ function coletarEventosDoMes(ano, mes) {
             diasFaturamentoOficiais.forEach(diaVenc => {
                 const dataVencimento = new Date(comp.ano, comp.mes, diaVenc);
                 regrasRegua.forEach(regra => {
+                    if (regra.vencimentosPermitidos && !regra.vencimentosPermitidos.includes(diaVenc)) return;
                     const dataEvento = calcularDataEventoExata(dataVencimento, regra.dias);
                     if (dataEvento.getFullYear() === ano && dataEvento.getMonth() === mes) {
                         const dNum = dataEvento.getDate();
@@ -734,6 +884,7 @@ function coletarEventosDoMes(ano, mes) {
             diasFaturamentoOficiais.forEach(diaVenc => {
                 const dataVencimento = new Date(comp.ano, comp.mes, diaVenc);
                 regrasEnxutas.forEach(regra => {
+                    if (regra.vencimentosPermitidos && !regra.vencimentosPermitidos.includes(diaVenc)) return;
                     const dataEvento = new Date(dataVencimento);
                     dataEvento.setDate(dataVencimento.getDate() + Math.round(regra.dias));
                     if (dataEvento.getFullYear() === ano && dataEvento.getMonth() === mes) {
@@ -1019,9 +1170,12 @@ function atualizarKPIs() {
     painel.innerHTML = catalogo.map(acao => {
         const quantidade = eventos.filter(ev => (ev.actionKey || ev.tituloRegra) === acao.actionKey).length;
         const classe = acao.tipoEvento || acao.grupo;
+        const descricaoDashboard = acao.actionKey === "whatsapp_14"
+            ? "D+14 • somente vencimentos 10, 15 e 20."
+            : acao.descricao;
         return `<div class="kpi-card action-kpi ${quantidade ? "has-events" : "is-zero"}">
             <span class="kpi-icon ${classe}">${icones[acao.grupo] || "•"}</span>
-            <div class="kpi-card-content"><strong>${quantidade}</strong><small>${escapeHTML(acao.titulo)}</small><em>${escapeHTML(acao.descricao)}</em></div>
+            <div class="kpi-card-content"><strong>${quantidade}</strong><small>${escapeHTML(acao.titulo)}</small><em>${escapeHTML(descricaoDashboard)}</em></div>
         </div>`;
     }).join("");
     painel.innerHTML += `<div class="kpi-card action-kpi total-kpi has-events"><span class="kpi-icon">Σ</span><div class="kpi-card-content"><strong>${eventos.length}</strong><small>Total de ações</small><em>Respeitando os filtros atuais.</em></div></div>`;

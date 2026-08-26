@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Master | Régua de Cobrança</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 </head>
 <body>
 
@@ -62,7 +64,9 @@
         <button id="btnToggleLayout" class="btn-toggle-layout" onclick="alternarLayout()">
             📋 Modo Atual: <strong>Layout Completo</strong> (Clique p/ Enxuta)
         </button>
+        <button id="btnNotificacoes" class="btn-admin" onclick="solicitarNotificacoes()">🔔 Ativar notificações</button>
         <button id="btnAdmin" class="btn-admin" onclick="abrirLoginAdmin()">🔐 Administração</button>
+        <span id="notificationStatus" class="notification-status" aria-live="polite"></span>
     </div>
 
     <!-- Barra de Ferramentas / Alternância de Visão -->
