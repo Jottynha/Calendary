@@ -36,7 +36,21 @@
     </div>
 
     <!-- Filtros e Controles -->
+    <div id="dashboardActionFilter" class="dashboard-action-filter hidden">
+        <span>
+            🔎 Filtro ativo:
+            <strong id="dashboardActionFilterName"></strong>
+        </span>
+
+        <button
+            type="button"
+            onclick="limparFiltroAcaoDashboard()"
+        >
+            Limpar filtro
+        </button>
+    </div>
     <div class="controls-panel">
+        
         <div class="config-group">
             <label for="selectFiltroVencimento">🎯 Focar Vencimento:</label>
             <select id="selectFiltroVencimento" onchange="mudarFiltroVencimento()">
