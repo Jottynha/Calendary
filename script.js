@@ -1195,15 +1195,18 @@ function renderizarCalendario() {
         destaqueVencimento || destaqueAcao
             ? " dot-highlight"
             : "";
-
             bolinhasHtml += `
                 <span
                     class="event-dot ${ev.tipo}${destaque}"
                     title="${
-                        ev.vencimentoOriginal !== 'N/A'
-                            ? 'Venc. ' + ev.vencimentoOriginal + ': '
-                            : ''
-                    }${ev.tituloRegra}${
+                    ev.vencimentoOriginal !== 'N/A'
+                        ? 'Vencimento: ' + formatarVencimentoCompleto(ev) + ' | '
+                        : ''
+                }${ev.tituloRegra} | Data da ação: ${formatarDataCompleta(ev.dataReal)}${
+                    ev.diasOffset !== undefined && ev.diasOffset !== 0
+                        ? ' | D+' + ev.diasOffset
+                        : ''
+                }"{
                         ev.excecao
                             ? ' ⚠️ Alterado: ' + ev.motivoExcecao
                             : ''
@@ -1345,12 +1348,35 @@ function abrirModalEventos(ano, mes, dia) {
             <p id="modalExceptionStatus" class="admin-status"></p>
         </div>`;
 
-    const listaHtml = eventosModalCache.length ? `<ul class="modal-events-list">${eventosModalCache.map((ev, index) => `
-        <li>
-            <span class="badge-type ${ev.tipo}">${ev.excecao ? "⚠️ " : ""}${ev.tituloRegra}</span>
-            <div class="event-info">
-                <strong>Vencimento base: ${ev.vencimentoOriginal === 'N/A' || ev.vencimentoOriginal === 'Geral' || ev.vencimentoOriginal === 'Bloqueados' ? ev.vencimentoOriginal : 'Dia ' + ev.vencimentoOriginal}</strong> (${labelTempo(ev)})
-                <p>${ev.desc}</p>
+            const listaHtml = eventosModalCache.length ? `<ul class="modal-events-list">${eventosModalCache.map((ev, index) => `
+                <li>
+                    <span class="badge-type ${ev.tipo}">${ev.excecao ? "⚠️ " : ""}${ev.tituloRegra}</span>
+                    <div class="event-info">
+                        <div class="event-date-info">
+
+            <strong>
+                Vencimento de referência:
+                ${
+                    ev.vencimentoOriginal === 'N/A' ||
+                    ev.vencimentoOriginal === 'Geral' ||
+                    ev.vencimentoOriginal === 'Bloqueados'
+                        ? ev.vencimentoOriginal
+                        : formatarVencimentoCompleto(ev)
+                }
+            </strong>
+
+            <strong>
+                Data da ação:
+                ${formatarDataCompleta(ev.dataReal)}
+            </strong>
+
+            <span>
+                ${labelTempo(ev)}
+            </span>
+
+        </div>
+
+        <p>${ev.desc}</p>
                 ${ev.excecao ? `<p class="exception-note">⚠️ ${escapeHTML(ev.motivoExcecao || 'Alterado excepcionalmente')} — original: ${escapeHTML(ev.dataOriginalExcecao || '')}.</p>` : ''}
                 ${ehAdmin ? `<button type="button" class="modal-edit-btn" onclick="abrirEditorExcecaoNoModal(${index})">✏️ ${ev.excecao ? 'Alterar esta exceção' : 'Alterar data excepcionalmente'}</button>` : ''}
             </div>
@@ -1395,4 +1421,45 @@ function fecharModalFora(event) { if (event.target === document.getElementById("
 function limparFiltroAcaoDashboard() {
     filtroAcaoGlobal = null;
     renderizarTudo();
+}
+function formatarDataCompleta(data) {
+    if (!data) return "N/A";
+
+    const d = data instanceof Date
+        ? data
+        : new Date(data);
+
+    if (isNaN(d.getTime())) return "N/A";
+
+    return d.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
+}
+
+function formatarVencimentoCompleto(ev) {
+    if (
+        ev.vencimentoOriginal === undefined ||
+        ev.vencimentoOriginal === null ||
+        ev.vencimentoOriginal === "N/A" ||
+        ev.vencimentoOriginal === "Geral"
+    ) {
+        return ev.vencimentoOriginal || "N/A";
+    }
+
+    const mes = Number(ev.competenciaMes);
+    const ano = Number(ev.competenciaAno);
+
+    if (!mes || !ano) {
+        return String(ev.vencimentoOriginal);
+    }
+
+    const dataVencimento = new Date(
+        ano,
+        mes - 1,
+        Number(ev.vencimentoOriginal)
+    );
+
+    return formatarDataCompleta(dataVencimento);
 }
