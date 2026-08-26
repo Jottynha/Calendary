@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // enquanto a página estiver aberta no navegador. O sistema não depende de
 // um servidor próprio para disparar o aviso.
 const CHAVE_NOTIFICACAO_DIA = "reguaCobranca_notificacaoDia";
-const INTERVALO_NOTIFICACAO_MS = 60 * 1000;
+const INTERVALO_NOTIFICACAO_MS = 60 * 60 * 1000;
 let ultimoDiaNotificado = null;
 let timerNotificacoes = null;
 
