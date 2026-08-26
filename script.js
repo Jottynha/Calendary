@@ -840,11 +840,15 @@ function coletarEventosDoMes(ano, mes) {
         // Cancelamento e Desativação são calculados individualmente a partir
         // de cada data de vencimento. A Visão Enxuta permanece inalterada.
         // =========================================================
-        const competencias = [
-            { ano: mes === 0 ? ano - 1 : ano, mes: mes === 0 ? 11 : mes - 1 },
-            { ano, mes },
-            { ano: mes === 11 ? ano + 1 : ano, mes: mes === 11 ? 0 : mes + 1 }
-        ];
+        const competencias = [];
+        for (let deslocamento = -3; deslocamento <= 1; deslocamento++) {
+            const dataCompetencia = new Date(ano, mes + deslocamento, 1);
+
+            competencias.push({
+                ano: dataCompetencia.getFullYear(),
+                mes: dataCompetencia.getMonth()
+            });
+        }
         competencias.forEach(comp => {
             diasFaturamentoOficiais.forEach(diaVenc => {
                 const dataVencimento = new Date(comp.ano, comp.mes, diaVenc);
