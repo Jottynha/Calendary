@@ -349,7 +349,8 @@ p.subtitle {
     gap: 3px;
     margin-top: 4px;
     max-height: 45px;
-    overflow: hidden;
+    overflow: visible;
+    padding: 3px 2px;
 }
 
 .event-dot {
@@ -360,8 +361,13 @@ p.subtitle {
 }
 
 .event-dot.dot-highlight {
-    transform: scale(1.4);
-    box-shadow: 0 0 6px #fff;
+    transform: scale(1.8);
+    transform-origin: center;
+    box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.65),
+        0 0 10px rgba(255, 255, 255, 0.9);
+    position: relative;
+    z-index: 5;
 }
 
 .event-count { font-size: 0.62rem; color: var(--text-muted); min-height: 12px; }
@@ -846,6 +852,35 @@ p.subtitle {
     .guide-panel .admin-secondary { width: 100%; }
 }
 
+.action-kpi {
+    cursor: pointer;
+    user-select: none;
+    transition:
+        border-color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
+}
+
+.action-kpi.dashboard-selected {
+    border-color: #3b82f6;
+    background: rgba(37, 99, 235, 0.12);
+
+    box-shadow:
+        0 0 0 2px rgba(59, 130, 246, 0.25),
+        0 0 18px rgba(59, 130, 246, 0.18);
+
+    transform: translateY(-2px);
+}
+
+.action-kpi.dashboard-selected .kpi-icon {
+    transform: scale(1.08);
+}
+
+.action-kpi:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
 /* =========================================================================
    NOTIFICAÇÕES NATIVAS
    ========================================================================= */
@@ -866,4 +901,60 @@ p.subtitle {
 #btnNotificacoes:disabled {
     opacity: 0.65;
     cursor: not-allowed;
+}
+
+.dashboard-action-filter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    margin: 10px 0 14px;
+    padding: 9px 12px;
+
+    border: 1px solid rgba(59, 130, 246, 0.45);
+    border-radius: 8px;
+
+    background: rgba(37, 99, 235, 0.10);
+
+    color: var(--text-primary, #e5e7eb);
+    font-size: 0.85rem;
+}
+
+.dashboard-action-filter strong {
+    color: #60a5fa;
+}
+
+.dashboard-action-filter button {
+    border: 1px solid rgba(96, 165, 250, 0.5);
+    border-radius: 6px;
+
+    padding: 5px 10px;
+
+    background: rgba(59, 130, 246, 0.12);
+    color: #93c5fd;
+
+    font-size: 0.78rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+.dashboard-action-filter button:hover {
+    background: rgba(59, 130, 246, 0.25);
+    border-color: #60a5fa;
+    transform: translateY(-1px);
+}
+
+.dashboard-action-filter button:active {
+    transform: translateY(0);
+}
+
+.dashboard-action-filter.hidden {
+    display: none;
 }
