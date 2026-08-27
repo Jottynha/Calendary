@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // enquanto a página estiver aberta no navegador. O sistema não depende de
 // um servidor próprio para disparar o aviso.
 const CHAVE_NOTIFICACAO_DIA = "reguaCobranca_notificacaoDia";
-const INTERVALO_NOTIFICACAO_MS = 60 * 1000;
+const INTERVALO_NOTIFICACAO_MS = 5 *60 * 1000;
 let ultimoDiaNotificado = null;
 let timerNotificacoes = null;
 
@@ -273,8 +273,8 @@ function notificarTarefasHoje(forcar = false) {
     try {
         const notificacao = new Notification(titulo, {
             body: corpo,
-            icon: "icon-192.png",
-            badge: "icon-32.png",
+            icon: "img/icon-192.png",
+            badge: "img/icon-32.png",
             tag: "regua-cobranca-tarefas-hoje",
             renotify: true
         });
@@ -1616,8 +1616,41 @@ function atualizarKPIs() {
         periodo.textContent = `${modoVisaoEnxuta ? "Visão enxuta" : "Layout completo"} • ${nomeMes}`;
     }
 
-    const icones = { ante: "⏳", vencimento: "📄", pos: "💬", whatsapp: "📱", bloqueio: "🚫", cancelamento: "⚠️", relatorio: "📊" };
-    painel.innerHTML = catalogo.map(acao => {
+    const icones = {
+        ante: `<svg class="action-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 6v6l4 2"/>
+            <circle cx="12" cy="12" r="9"/>
+        </svg>`,
+
+        vencimento: `<svg class="action-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2"/>
+            <path d="M16 3v4M8 3v4M3 10h18"/>
+        </svg>`,
+
+        pos: `<svg class="action-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 11.5a8 8 0 0 1-8 8H6l-3 2v-5a8 8 0 1 1 17-5z"/>
+        </svg>`,
+
+        whatsapp: `<svg class="action-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.1A8 8 0 1 1 20 11.5z"/>
+            <path d="M9 9.5c.3 1.5 1.5 3 3.5 4"/>
+        </svg>`,
+
+        bloqueio: `<svg class="action-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="10" width="14" height="11" rx="2"/>
+            <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        </svg>`,
+
+        cancelamento: `<svg class="action-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="m9 9 6 6M15 9l-6 6"/>
+        </svg>`,
+
+        relatorio: `<svg class="action-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 19V5M4 19h16"/>
+            <path d="M8 16v-5M12 16V8M16 16v-7"/>
+        </svg>`
+    };    painel.innerHTML = catalogo.map(acao => {
         const quantidade = eventos.filter(ev => (ev.actionKey || ev.tituloRegra) === acao.actionKey).length;
         const classe = acao.tipoEvento || acao.grupo;
         const descricaoDashboard = acao.actionKey === "whatsapp_14"
@@ -1706,7 +1739,7 @@ function abrirModalEventos(ano, mes, dia) {
 
 function baixarGuiaCalendario() {
     const link = document.createElement("a");
-    link.href = "GUIA_CALENDARIO.pdf";
+    link.href = "docs/GUIA_CALENDARIO.pdf";
     link.download = "Guia_Calendario_Regua_Cobranca.pdf";
     document.body.appendChild(link);
     link.click();
