@@ -793,7 +793,8 @@ p.subtitle {
     .master-logo,
     .theme-toggle,
     .btn-admin,
-    .feedback-btn {
+    .feedback-btn,
+    .notification-panel {
         display: none !important;
     }
     body {
