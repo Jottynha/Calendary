@@ -28,7 +28,7 @@ const regrasRegua = [
     { dias: 2, titulo: "SMS de Aviso", tipo: "pos", categoria: "sms", actionKey: "sms_2", desc: "02 dias após o vencimento - Disparo de SMS." },
     { dias: 4, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", actionKey: "email_4", desc: "04 dias após o vencimento - PDF por E-mail." },
     { dias: 10, titulo: "E-mail PDF", tipo: "pos", categoria: "fatura", actionKey: "email_10", desc: "10 dias após o vencimento - PDF por E-mail." },
-    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "pos", categoria: "fatura", actionKey: "whatsapp_14", vencimentosPermitidos: [10, 15, 20], desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail. Somente para vencimentos 10, 15 e 20." },
+    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "pos", categoria: "fatura", actionKey: "whatsapp_14", vencimentosPermitidos: [10, 15, 20], desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail." },
     { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", actionKey: "bloqueio_15", desc: "Bloqueio de serviço (Fibra, Outros, Wireless e Parcial MVNO)." },
     { dias: 18, titulo: "Assessorias", tipo: "bloqueio", categoria: "bloqueio", actionKey: "assessorias_18", desc: "Encaminhamento automático para as Assessorias Externas." },
     { dias: 30, titulo: "Serasa", tipo: "cancelamento", categoria: "cancelamento", actionKey: "serasa_30", desc: "Inclusão das mensalidades negativadas no Serasa." },
@@ -40,7 +40,7 @@ const regrasRegua = [
 // REGRAS DA VISÃO ENXUTA
 // =========================================================================
 const regrasEnxutas = [
-    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "whatsapp", categoria: "fatura", actionKey: "whatsapp_14", vencimentosPermitidos: [10, 15, 20], desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail. Somente para vencimentos 10, 15 e 20."},
+    { dias: 14, titulo: "WhatsApp/E-mail", tipo: "whatsapp", categoria: "fatura", actionKey: "whatsapp_14", vencimentosPermitidos: [10, 15, 20], desc: "14 dias após o vencimento - Fatura por WhatsApp e E-mail."},
     { dias: 15, titulo: "Bloqueio", tipo: "bloqueio", categoria: "bloqueio", actionKey: "bloqueio_15", desc: "15 dias após o vencimento - Bloqueio de serviço." }
 ];
 
@@ -1288,20 +1288,108 @@ function renderizarAcoesHoje() {
     if (!containerHoje) return;
 
     const hoje = new Date();
-    const eventosHoje = filtrarEventos(coletarEventosDoMes(hoje.getFullYear(), hoje.getMonth())[hoje.getDate()] || []);
-    
+
+    const eventosHoje = filtrarEventos(
+        coletarEventosDoMes(
+            hoje.getFullYear(),
+            hoje.getMonth()
+        )[hoje.getDate()] || []
+    );
+
     if (!eventosHoje.length) {
-        containerHoje.innerHTML = `<p class="no-actions-today">Nenhuma ação operacional corresponde aos filtros para hoje.</p>`;
+        containerHoje.innerHTML = `
+            <p class="no-actions-today">
+                Nenhuma ação operacional corresponde aos filtros para hoje.
+            </p>
+        `;
         return;
     }
-    
-    containerHoje.innerHTML = `<div class="today-actions-list">${eventosHoje.map(ev => `
-        <div class="today-action-item">
-            <span class="badge-type ${ev.tipo}">${ev.excecao ? "⚠️ " : ""}${ev.tituloRegra}</span>
-            <div class="today-action-text">
-                <strong>Vencimento base: ${ev.vencimentoOriginal === 'N/A' || ev.vencimentoOriginal === 'Geral' || ev.vencimentoOriginal === 'Bloqueados' ? ev.vencimentoOriginal : 'Dia ' + ev.vencimentoOriginal}</strong> (${labelTempo(ev)}) - ${ev.desc}
-            </div>
-        </div>`).join("")}</div>`;
+
+    // Formata o vencimento completo usando a competência
+    // associada ao evento.
+    function formatarVencimentoHoje(ev) {
+        if (
+            ev.vencimentoOriginal === "N/A" ||
+            ev.vencimentoOriginal === "Geral" ||
+            ev.vencimentoOriginal === "Bloqueados"
+        ) {
+            return ev.vencimentoOriginal;
+        }
+
+        const dia = Number(ev.vencimentoOriginal);
+        const mes = Number(ev.competenciaMes);
+        const ano = Number(ev.competenciaAno);
+
+        if (!dia || !mes || !ano) {
+            return `Dia ${ev.vencimentoOriginal}`;
+        }
+
+        const dataVencimento = new Date(
+            ano,
+            mes - 1,
+            dia
+        );
+
+        return dataVencimento.toLocaleDateString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        });
+    }
+
+    // Mostra apenas o D+N, evitando repetir
+    // "15 dias após", "14 dias após", etc.
+    function resumoOffset(ev) {
+        if (ev.categoria === "relatorio") {
+            return "Tarefa recorrente";
+        }
+
+        if (ev.diasOffset === 0) {
+            return "Data fixa";
+        }
+
+        if (ev.diasOffset < 0) {
+            return `D-${Math.abs(ev.diasOffset)}`;
+        }
+
+        return `D+${ev.diasOffset}`;
+    }
+
+    containerHoje.innerHTML = `
+        <div class="today-actions-list">
+
+            ${eventosHoje.map(ev => {
+
+                const vencimento = formatarVencimentoHoje(ev);
+                const offset = resumoOffset(ev);
+
+                return `
+                    <div class="today-action-item">
+
+                        <span class="badge-type ${ev.tipo}">
+                            ${ev.excecao ? "⚠️ " : ""}
+                            ${ev.tituloRegra}
+                        </span>
+
+                        <div class="today-action-text">
+
+                            <strong>
+                                Vencimento: ${vencimento}
+                            </strong>
+
+                            <span class="today-action-offset">
+                                ${offset}
+                            </span>
+
+                        </div>
+
+                    </div>
+                `;
+
+            }).join("")}
+
+        </div>
+    `;
 }
 
 function labelTempo(ev) {

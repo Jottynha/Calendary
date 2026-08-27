@@ -414,6 +414,17 @@ p.subtitle {
     backdrop-filter: blur(3px);
 }
 
+.modal-body {
+    padding-left: 12px;
+    padding-right: 28px;
+    box-sizing: border-box;
+}
+
+.modal-events-list {
+    padding-right: 8px;
+    box-sizing: border-box;
+}
+
 .modal-content {
     background: var(--panel-bg);
     border: 1px solid var(--border-color);
@@ -432,6 +443,48 @@ p.subtitle {
 .modal-events-list { list-style: none; padding: 0; margin: 0; }
 .modal-events-list li { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(31, 41, 55, 0.5); }
 .modal-events-list li:last-child { border-bottom: none; }
+/* =========================================================
+   MODAL - ORGANIZAÇÃO DOS EVENTOS
+   ========================================================= */
+
+.modal-events-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0;
+}
+
+.modal-events-list .badge-type {
+    flex: 0 0 auto;
+    min-width: 96px;
+    max-width: 150px;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.2;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    box-sizing: border-box;
+}
+
+.modal-events-list .event-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.modal-events-list .event-info > strong {
+    display: block;
+    line-height: 1.35;
+}
+
+.modal-events-list .event-info > p {
+    margin: 2px 0 0;
+    line-height: 1.4;
+}
 
 .badge-type {
     font-size: 0.65rem; padding: 3px 6px; border-radius: 4px; color: white;
@@ -957,4 +1010,24 @@ p.subtitle {
 
 .dashboard-action-filter.hidden {
     display: none;
+}
+
+.today-action-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.today-action-text strong {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.today-action-offset {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.75;
+    white-space: nowrap;
 }
