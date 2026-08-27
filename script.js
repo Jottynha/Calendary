@@ -462,11 +462,45 @@ function executarAvisoNotificacao() {
 
   if ("Notification" in window) {
     if (Notification.permission === "granted") {
-      new Notification("Master | Régua de Cobrança", {
-        body: "Há ações previstas para este momento.",
-        icon: "img/favicon.png"
+      const { hoje, filtrados, acoes, excecoes } = obterResumoTarefasHoje();
+      if (!filtrados.length) return;
+
+      const dataFormatada = hoje.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
       });
-    }
+      const principais = acoes
+        .slice(0, 4)
+        .map((a) => `${a.quantidade} ${a.titulo}`)
+        .join(" • ");
+      const extra = acoes.length > 4 ? ` • +${acoes.length - 4} tipos` : "";
+
+      const titulo = excecoes.length
+        ? `⚠️ Régua de Cobrança — ${excecoes.length} exceção(ões)`
+        : `🔔 Régua de Cobrança — tarefas de hoje`;
+
+      const corpo = `📅 ${dataFormatada}\n${principais}${extra}\nTotal: ${formatarNumero(filtrados.length)} ações`;
+
+      try {
+        const notificacao = new Notification(titulo, {
+          body: corpo,
+          icon: "img/icon-192.png",
+          badge: "img/icon-32.png",
+          tag: "regua-cobranca-tarefas-hoje",
+          renotify: true,
+        });
+
+        notificacao.onclick = () => {
+          window.focus();
+          notificacao.close();
+          const painel = document.querySelector(".today-actions-panel");
+          if (painel) painel.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+      } catch (erro) {
+        console.error("Erro ao criar notificação nativa:", erro);
+      }
+      }
   }
 }
 
@@ -583,10 +617,6 @@ function notificarTarefasHoje(forcar = false) {
   const { hoje, filtrados, acoes, excecoes } = obterResumoTarefasHoje();
   if (!filtrados.length) return;
 
-  //const chaveHoje = dataLocalISO(hoje);
-  //const ultimoSalvo = localStorage.getItem(CHAVE_NOTIFICACAO_DIA);
-  //if (!forcar && ultimoSalvo === chaveHoje) return;
-
   const dataFormatada = hoje.toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -619,9 +649,6 @@ function notificarTarefasHoje(forcar = false) {
       const painel = document.querySelector(".today-actions-panel");
       if (painel) painel.scrollIntoView({ behavior: "smooth", block: "start" });
     };
-
-    localStorage.setItem(CHAVE_NOTIFICACAO_DIA, chaveHoje);
-    ultimoDiaNotificado = chaveHoje;
   } catch (erro) {
     console.error("Erro ao criar notificação nativa:", erro);
   }
