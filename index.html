@@ -30,10 +30,29 @@
       💬 Contato [Email]
     </a>
     <!-- Administração -->
-        <button id="btnAdmin" class="btn-admin" onclick="abrirLoginAdmin()">
-          <span class="ui-icon ui-lock" aria-hidden="true"> ⌑ </span>
-          Administração
-        </button>
+    <button id="btnAdmin" class="btn-admin" onclick="abrirLoginAdmin()">
+      <span class="ui-icon ui-lock" aria-hidden="true"> ⌑ </span>
+      Administração
+    </button>
+    <div id="notificationPanel" class="notification-panel">
+      <div class="notification-config">
+        <span class="ui-icon ui-bell" aria-hidden="true">🔔</span>
+
+        <select id="notificationInterval" title="Intervalo das notificações">
+          <option value="1">A cada 1 minuto</option>
+          <option value="5" selected>A cada 5 minutos</option>
+          <option value="10">A cada 10 minutos</option>
+          <option value="15">A cada 15 minutos</option>
+          <option value="30">A cada 30 minutos</option>
+          <option value="60">A cada 1 hora</option>
+        </select>
+      </div>
+
+      <div class="notification-next">
+        <span>Próximo aviso</span>
+        <strong id="notificationCountdown">--:--</strong>
+      </div>
+    </div>
     <div class="container">
       <!-- CABEÇALHO -->
       <header>

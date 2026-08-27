@@ -402,9 +402,73 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 // NOTIFICAÇÕES NATIVAS DO NAVEGADOR
 const CHAVE_NOTIFICACAO_DIA = "reguaCobranca_notificacaoDia";
-const INTERVALO_NOTIFICACAO_MS = 5 * 60 * 1000;
+let intervaloNotificacaoMs = 5 * 60 * 1000;
+let proximoAvisoTimestamp = null;
+let notificationTimer = null;
+let countdownTimer = null;
 let ultimoDiaNotificado = null;
 let timerNotificacoes = null;
+
+function alterarIntervaloNotificacao() {
+  const select = document.getElementById("notificationInterval");
+
+  if (!select) return;
+
+  const minutos = Number(select.value);
+
+  intervaloNotificacaoMs = minutos * 60 * 1000;
+
+  // Reinicia a contagem
+  proximoAvisoTimestamp = Date.now() + intervaloNotificacaoMs;
+
+  atualizarContadorNotificacao();
+
+  console.log(
+    `Intervalo de notificações alterado para ${minutos} minuto(s).`
+  );
+}
+
+function atualizarContadorNotificacao() {
+  const contador = document.getElementById("notificationCountdown");
+
+  if (!contador || !proximoAvisoTimestamp) return;
+
+  const restante = Math.max(
+    0,
+    proximoAvisoTimestamp - Date.now()
+  );
+
+  const totalSegundos = Math.ceil(restante / 1000);
+
+  const minutos = Math.floor(totalSegundos / 60);
+  const segundos = totalSegundos % 60;
+
+  contador.textContent =
+    `${String(minutos).padStart(2, "0")}:` +
+    `${String(segundos).padStart(2, "0")}`;
+
+  if (restante <= 0) {
+    executarAvisoNotificacao();
+
+    proximoAvisoTimestamp =
+      Date.now() + intervaloNotificacaoMs;
+  }
+}
+
+function executarAvisoNotificacao() {
+  console.log("🔔 Executando aviso de notificação...");
+
+  // Coloque aqui sua lógica atual de notificação.
+
+  if ("Notification" in window) {
+    if (Notification.permission === "granted") {
+      new Notification("Master | Régua de Cobrança", {
+        body: "Há ações previstas para este momento.",
+        icon: "img/favicon.png"
+      });
+    }
+  }
+}
 
 function dataLocalISO(data = new Date()) {
   const y = data.getFullYear();
@@ -2408,4 +2472,19 @@ function carregarTema() {
 
 document.addEventListener("DOMContentLoaded", () => {
   carregarTema();
+  const select = document.getElementById("notificationInterval");
+  if (select) {
+    select.addEventListener(
+      "change",
+      alterarIntervaloNotificacao
+    );
+  }
+  // Primeiro aviso
+  proximoAvisoTimestamp =
+    Date.now() + intervaloNotificacaoMs;
+  countdownTimer = setInterval(
+    atualizarContadorNotificacao,
+    1000
+  );
+  atualizarContadorNotificacao();
 });
