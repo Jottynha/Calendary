@@ -400,14 +400,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 });
-
-// =========================================================================
 // NOTIFICAÇÕES NATIVAS DO NAVEGADOR
-// =========================================================================
-// A Notification API só funciona depois que o usuário concede permissão.
-// Como o projeto está no GitHub Pages, as notificações são garantidas
-// enquanto a página estiver aberta no navegador. O sistema não depende de
-// um servidor próprio para disparar o aviso.
 const CHAVE_NOTIFICACAO_DIA = "reguaCobranca_notificacaoDia";
 const INTERVALO_NOTIFICACAO_MS = 5 * 60 * 1000;
 let ultimoDiaNotificado = null;
@@ -510,8 +503,6 @@ async function solicitarNotificacoes() {
 function inicializarNotificacoes() {
   atualizarStatusNotificacoes();
   if (!("Notification" in window)) return;
-
-  // O aviso é verificado enquanto o Pages estiver aberto.
   if (Notification.permission === "granted") {
     setTimeout(() => notificarTarefasHoje(false), 1500);
     timerNotificacoes = setInterval(
@@ -952,13 +943,7 @@ function fecharEditorExcecaoNoModal() {
   if (editor) editor.style.display = "none";
   limparFormularioExcecao();
 }
-
-// ================================================================
 // SINCRONIZAÇÃO: BLOQUEIO → WHATSAPP
-// O WhatsApp ocorre 1 dia antes do Bloqueio.
-// Só existe para vencimentos 10, 15 e 20.
-// ================================================================
-
 function ehBloqueio(ev) {
   return ev?.actionKey === "bloqueio_15" || ev?.tituloRegra === "Bloqueio";
 }
@@ -988,9 +973,6 @@ async function sincronizarWhatsAppComBloqueio({
     };
   }
 
-  // WhatsApp = D+14
-  // Bloqueio = D+15
-  // Portanto: WhatsApp = Bloqueio - 1 dia.
   const whatsappOriginal = somarDiasDataISO(bloqueioOriginal, -1);
 
   const whatsappNovo = somarDiasDataISO(bloqueioNovo, -1);
@@ -1002,8 +984,6 @@ async function sincronizarWhatsAppComBloqueio({
     };
   }
 
-  // Procura uma exceção de WhatsApp que já exista.
-  // Isso é importante caso o WhatsApp já tenha sido alterado anteriormente.
   const { data: existente, error: buscaError } = await supabaseClient
     .from("excecoes_calendario")
     .select("*")
@@ -1024,8 +1004,6 @@ async function sincronizarWhatsAppComBloqueio({
 
   const motivoAutomatico = `🔗 Movido automaticamente devido à alteração do Bloqueio associado (${bloqueioOriginal} → ${bloqueioNovo}).`;
 
-  // Se já existe uma exceção de WhatsApp,
-  // apenas atualiza a nova data.
   if (existente) {
     const motivoAnterior = existente.motivo || "";
 
@@ -1059,8 +1037,6 @@ async function sincronizarWhatsAppComBloqueio({
     };
   }
 
-  // Caso ainda não exista exceção,
-  // cria automaticamente uma.
   const payloadWhatsApp = {
     original_date: whatsappOriginal,
     new_date: whatsappNovo,
@@ -1152,10 +1128,6 @@ async function salvarExcecaoDoModal() {
     status.textContent = "Não foi possível salvar a alteração.";
     return;
   }
-
-  // ================================================================
-  // SE FOR BLOQUEIO, MOVE O WHATSAPP ASSOCIADO AUTOMATICAMENTE
-  // ================================================================
 
   let resultadoWhatsApp = null;
 
@@ -1272,10 +1244,6 @@ async function salvarExcecao() {
     status.textContent = "Erro ao salvar a exceção.";
     return;
   }
-
-  // ================================================================
-  // SINCRONIZAR WHATSAPP QUANDO O BLOQUEIO FOR ALTERADO
-  // ================================================================
 
   if (titulo === "Bloqueio" && venc && vencimentoTemWhatsApp(venc)) {
     const resultadoWhatsApp = await sincronizarWhatsAppComBloqueio({
@@ -1428,11 +1396,6 @@ function coletarEventosDoMes(ano, mes) {
   };
 
   if (!modoVisaoEnxuta) {
-    // =========================================================
-    // MODO LAYOUT COMPLETO (SISTEMA ORIGINAL)
-    // Cancelamento e Desativação são calculados individualmente a partir
-    // de cada data de vencimento. A Visão Enxuta permanece inalterada.
-    // =========================================================
     const competencias = [];
     for (let deslocamento = -3; deslocamento <= 1; deslocamento++) {
       const dataCompetencia = new Date(ano, mes + deslocamento, 1);
@@ -1480,11 +1443,6 @@ function coletarEventosDoMes(ano, mes) {
       });
     });
   } else {
-    // =========================================================
-    // MODO VISÃO ENXUTA (NOVAS REGRAS SOLICITADAS)
-    // =========================================================
-
-    // 1. WhatsApp (14d) e Bloqueio (15d) baseados nos vencimentos oficiais
     const competencias = [
       { ano: mes === 0 ? ano - 1 : ano, mes: mes === 0 ? 11 : mes - 1 },
       { ano, mes },
@@ -1526,7 +1484,6 @@ function coletarEventosDoMes(ano, mes) {
       });
     });
 
-    // 2. Datas Fixas de Faturamento
     const faturamentosFixos = [
       {
         dia: 16,
@@ -1564,11 +1521,7 @@ function coletarEventosDoMes(ano, mes) {
         dataReal: dataFat,
       });
     });
-
-    // 3. Data de Corte (Cancelamento) - Dia 12 de cada mês com CÁLCULO DINÂMICO
     const dataCorte = new Date(ano, mes, 12);
-
-    // Bloqueio = Vencimento + 15 dias. Corte = Bloqueio + 74.5 dias (89.5 dias totais pós-vencimento)
     const msPorDia = 24 * 60 * 60 * 1000;
     const dataLimiteBloqueio = new Date(dataCorte.getTime() - 74.5 * msPorDia);
     const dataLimiteVencimento = new Date(
@@ -1582,8 +1535,6 @@ function coletarEventosDoMes(ano, mes) {
       year: "numeric",
     });
     const dataLimiteStr = dataLimiteVencimento.toLocaleDateString("pt-BR");
-
-    // Filtrar quais vencimentos oficiais entram na regra de cancelamento neste mês
     const vencimentosEntrantes = diasFaturamentoOficiais.filter((diaVenc) => {
       const dataVenc = new Date(anoRef, mesRef, diaVenc);
       return dataVenc <= dataLimiteVencimento;
@@ -1595,7 +1546,6 @@ function coletarEventosDoMes(ano, mes) {
     } else {
       detalheRegra = `Aplica-se a todos os vencimentos até ${dataLimiteStr}.`;
     }
-
     adicionarEvento(12, {
       vencimentoOriginal: "Bloqueados",
       competenciaMes: mes + 1,
@@ -1608,15 +1558,11 @@ function coletarEventosDoMes(ano, mes) {
       diasOffset: 74.5,
       dataReal: dataCorte,
     });
-
-    // 4. Relatórios Semanais (Segundas, Terças e Sextas)
     const totalDiasMes = new Date(ano, mes + 1, 0).getDate();
     for (let d = 1; d <= totalDiasMes; d++) {
       const dataIterada = new Date(ano, mes, d);
       const diaSemana = dataIterada.getDay();
-
       if (diaSemana === 1) {
-        // Segunda-feira
         adicionarEvento(d, {
           vencimentoOriginal: "N/A",
           competenciaMes: mes + 1,
@@ -1630,7 +1576,6 @@ function coletarEventosDoMes(ano, mes) {
           dataReal: dataIterada,
         });
       } else if (diaSemana === 2 || diaSemana === 5) {
-        // Terça ou Sexta-feira
         adicionarEvento(d, {
           vencimentoOriginal: "N/A",
           competenciaMes: mes + 1,
@@ -1652,8 +1597,6 @@ function coletarEventosDoMes(ano, mes) {
 
 function filtrarPorAcaoDashboard(actionKey) {
   if (!actionKey) return;
-
-  // Clicar novamente na mesma ação remove o filtro
   if (filtroAcaoGlobal === actionKey) {
     filtroAcaoGlobal = null;
   } else {
@@ -1708,9 +1651,6 @@ function renderizarAcoesHoje() {
         `;
     return;
   }
-
-  // Formata o vencimento completo usando a competência
-  // associada ao evento.
   function formatarVencimentoHoje(ev) {
     if (
       ev.vencimentoOriginal === "N/A" ||
@@ -1736,9 +1676,6 @@ function renderizarAcoesHoje() {
       year: "numeric",
     });
   }
-
-  // Mostra apenas o D+N, evitando repetir
-  // "15 dias após", "14 dias após", etc.
   function resumoOffset(ev) {
     if (ev.categoria === "relatorio") {
       return "Tarefa recorrente";
@@ -1846,11 +1783,6 @@ function renderizarCalendario() {
     const dataIterada = new Date(ano, mes, dia);
     const eventosDoDia = eventosDoMes[dia] || [];
     let classesExtras = dataIterada.toDateString() === hojeStr ? " hoje" : "";
-
-    // =========================================================
-    // FOCO POR VENCIMENTO
-    // =========================================================
-
     const focoVencimentoAtivo = vencimentoFocoGlobal !== null;
 
     const diaTemVencimentoFocado =
@@ -1860,10 +1792,6 @@ function renderizarCalendario() {
           (ev) => ev.vencimentoOriginal === vencimentoFocoGlobal,
         ));
 
-    // =========================================================
-    // FOCO POR AÇÃO DO DASHBOARD
-    // =========================================================
-
     const focoAcaoAtivo = !!filtroAcaoGlobal;
 
     const diaTemAcaoFocada =
@@ -1871,11 +1799,6 @@ function renderizarCalendario() {
       eventosDoDia.some(
         (ev) => (ev.actionKey || ev.tituloRegra) === filtroAcaoGlobal,
       );
-
-    // =========================================================
-    // APLICAÇÃO DO FOCO
-    // =========================================================
-
     const algumFocoAtivo = focoVencimentoAtivo || focoAcaoAtivo;
 
     const diaTemFoco =
