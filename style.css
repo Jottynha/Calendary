@@ -781,70 +781,315 @@ p.subtitle {
   }
 }
 
-@media print {
-  body {
-    background: white !important;
-    color: #111 !important;
-    padding: 0;
-  }
-  .container,
-  .modal-overlay {
-    display: none !important;
-  }
-  .print-report {
-    display: block !important;
-    color: #111;
-    font-family: Arial, sans-serif;
-    padding: 20px;
-  }
-  .print-report h1 {
-    color: #111;
-    font-size: 20px;
-    margin: 0 0 4px;
-  }
-  .print-report h2 {
-    color: #333;
-    font-size: 15px;
-    margin: 0 0 8px;
-  }
-  .print-report p {
-    color: #555;
-    font-size: 10px;
-    margin: 0 0 12px;
-  }
-  .print-kpis {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 14px;
-    font-size: 10px;
-  }
-  .print-kpis b {
-    border: 1px solid #bbb;
-    padding: 5px 8px;
-    border-radius: 4px;
-  }
-  .print-report table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 9px;
-  }
-  .print-report th,
-  .print-report td {
-    border: 1px solid #ccc;
-    padding: 5px;
-    text-align: left;
-    vertical-align: top;
-  }
-  .print-report th {
-    background: #eee;
-  }
-  @page {
-    size: A4 landscape;
-    margin: 12mm;
-  }
+/* =========================================================================
+   RELATÓRIO PDF / IMPRESSÃO — IDENTIDADE MASTER
+   ========================================================================= */
+
+.print-report {
+    display: none;
 }
 
+@media print {
+    .master-logo,
+    .theme-toggle,
+    .btn-admin,
+    .feedback-btn {
+        display: none !important;
+    }
+    body {
+        background: #fff !important;
+        color: #172033 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .container,
+    .modal-overlay {
+        display: none !important;
+    }
+
+    .print-report {
+        display: block !important;
+        color: #172033;
+        background: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 18px 20px;
+    }
+
+    /* =====================================================
+       CABEÇALHO
+       ===================================================== */
+
+    .print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        padding-bottom: 8px;
+    }
+
+    .print-brand {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        color: #155eef;
+        margin-bottom: 3px;
+    }
+
+    .print-header h1 {
+        margin: 0;
+        color: #102a56 !important;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -.4px;
+    }
+
+    .print-subtitle {
+        margin: 4px 0 0;
+        color: #64748b !important;
+        font-size: 10px;
+    }
+
+    .print-header-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        font-size: 8px;
+        color: #64748b;
+    }
+
+    .print-header-info strong {
+        color: #155eef;
+        font-size: 8px;
+        letter-spacing: .7px;
+    }
+
+    /* =====================================================
+       LINHA AZUL / AMARELA
+       ===================================================== */
+
+    .print-divider {
+        height: 4px;
+        margin: 8px 0 12px;
+        border-radius: 4px;
+        background:
+            linear-gradient(
+                90deg,
+                #155eef 0%,
+                #155eef 82%,
+                #f5c400 82%,
+                #f5c400 100%
+            );
+    }
+
+    /* =====================================================
+       FILTROS
+       ===================================================== */
+
+    .print-filters {
+        background: #f4f7fb;
+        border: 1px solid #dbe5f0;
+        border-left: 4px solid #155eef;
+        border-radius: 5px;
+        padding: 7px 9px;
+        margin-bottom: 12px;
+        font-size: 8.5px;
+        color: #475569;
+    }
+
+    .print-filters strong {
+        color: #102a56;
+    }
+
+    /* =====================================================
+       KPIs
+       ===================================================== */
+
+    .print-kpis {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 7px;
+        margin-bottom: 15px;
+    }
+
+    .print-kpi {
+        position: relative;
+        overflow: hidden;
+
+        border: 1px solid #dbe5f0;
+        border-radius: 7px;
+
+        padding: 7px 9px;
+
+        background: #fff;
+    }
+
+    .print-kpi::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #155eef;
+    }
+
+    .print-kpi.total::before {
+        background: #155eef;
+    }
+
+    .print-kpi.bloqueio::before {
+        background: #f97316;
+    }
+
+    .print-kpi.sms::before {
+        background: #6366f1;
+    }
+
+    .print-kpi.fatura::before {
+        background: #2980b9;
+    }
+
+    .print-kpi.cancelamento::before {
+        background: #ef4444;
+    }
+
+    .print-kpi-label {
+        display: block;
+        color: #64748b;
+        font-size: 6.5px;
+        font-weight: 700;
+        letter-spacing: .3px;
+        margin-bottom: 2px;
+    }
+
+    .print-kpi strong {
+        display: block;
+        color: #102a56;
+        font-size: 16px;
+        line-height: 1;
+    }
+
+    .print-kpi small {
+        display: block;
+        color: #94a3b8;
+        font-size: 6.5px;
+        margin-top: 3px;
+    }
+
+    /* =====================================================
+       TÍTULO DA TABELA
+       ===================================================== */
+
+    .print-section-title {
+        color: #102a56;
+        font-size: 11px;
+        font-weight: 800;
+
+        padding-bottom: 6px;
+        margin-bottom: 0;
+
+        border-bottom: 2px solid #155eef;
+    }
+
+    /* =====================================================
+       TABELA
+       ===================================================== */
+
+    .print-report table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 7.5px;
+    }
+
+    .print-report th,
+    .print-report td {
+        border: 1px solid #dbe5f0;
+        padding: 5px 6px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .print-report th {
+        background: #155eef;
+        color: #fff;
+        font-size: 7px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+    }
+
+    .print-report tbody tr:nth-child(even) {
+        background: #f8fafc;
+    }
+
+    .print-report tbody tr:hover {
+        background: #fff;
+    }
+
+    .print-date {
+        color: #155eef;
+        font-weight: 700;
+        width: 11%;
+    }
+
+    .print-event {
+        color: #172033;
+        font-weight: 600;
+        width: 30%;
+    }
+
+    .print-venc {
+        color: #475569;
+        font-weight: 600;
+        width: 10%;
+    }
+
+    .print-report td:nth-child(4) {
+        color: #475569;
+        line-height: 1.35;
+    }
+
+    .print-empty {
+        text-align: center !important;
+        color: #94a3b8 !important;
+        padding: 20px !important;
+    }
+
+    /* =====================================================
+       RODAPÉ
+       ===================================================== */
+
+    .print-footer {
+        display: flex;
+        justify-content: space-between;
+
+        margin-top: 12px;
+        padding-top: 6px;
+
+        border-top: 1px solid #dbe5f0;
+
+        color: #94a3b8;
+        font-size: 6.5px;
+    }
+
+    .print-footer span:first-child {
+        color: #155eef;
+        font-weight: 700;
+    }
+
+    /* =====================================================
+       CONFIGURAÇÃO A4
+       ===================================================== */
+
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
+    }
+}
 /* ADMINISTRAÇÃO E EXCEÇÕES */
 .btn-admin {
   background: #172554;

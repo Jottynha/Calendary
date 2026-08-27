@@ -2141,14 +2141,150 @@ function exportarCSV() {
 
 function exportarPDF() {
   const eventos = obterListaEventos();
+
   const mesNome = dataAtual.toLocaleDateString("pt-BR", {
     month: "long",
     year: "numeric",
   });
+
   const printReport = document.getElementById("printReport");
   if (!printReport) return;
 
-  printReport.innerHTML = `<h1>Master | Régua de Cobrança ${modoVisaoEnxuta ? "(Visão Enxuta)" : ""}</h1><h2>Relatório operacional — ${mesNome}</h2><p>Filtros: ${filtroTipoGlobal || "Todos os eventos"}${vencimentoFocoGlobal ? ` | Vencimento: dia ${vencimentoFocoGlobal}` : ""}</p><div class="print-kpis"><b>Total: ${eventos.length}</b><b>Bloqueios: ${eventos.filter((e) => e.categoria === "bloqueio").length}</b><b>SMS: ${eventos.filter((e) => e.categoria === "sms").length}</b><b>Faturas/E-mails: ${eventos.filter((e) => e.categoria === "fatura").length}</b><b>Serasa/Cancel.: ${eventos.filter((e) => e.categoria === "cancelamento").length}</b></div><table><thead><tr><th>Data</th><th>Evento</th><th>Venc.</th><th>Descrição</th></tr></thead><tbody>${eventos.map((ev) => `<tr><td>${ev.dataReal.toLocaleDateString("pt-BR")}</td><td>${ev.tituloRegra}</td><td>${ev.vencimentoOriginal}</td><td>${ev.desc}</td></tr>`).join("")}</tbody></table>`;
+  const totalBloqueios = eventos.filter(
+    (e) => e.categoria === "bloqueio"
+  ).length;
+
+  const totalSMS = eventos.filter(
+    (e) => e.categoria === "sms"
+  ).length;
+
+  const totalFaturas = eventos.filter(
+    (e) => e.categoria === "fatura"
+  ).length;
+
+  const totalCancelamentos = eventos.filter(
+    (e) => e.categoria === "cancelamento"
+  ).length;
+
+  printReport.innerHTML = `
+    <div class="print-header">
+      <div>
+        <div class="print-brand">MASTER</div>
+        <h1>Régua de Cobrança</h1>
+        <p class="print-subtitle">
+          Relatório operacional — ${mesNome}
+        </p>
+      </div>
+
+      <div class="print-header-info">
+        <strong>${modoVisaoEnxuta ? "VISÃO ENXUTA" : "VISÃO COMPLETA"}</strong>
+        <span>Gerado em ${new Date().toLocaleDateString("pt-BR")}</span>
+      </div>
+    </div>
+
+    <div class="print-divider"></div>
+
+    <div class="print-filters">
+      <strong>Filtros aplicados:</strong>
+      ${filtroTipoGlobal || "Todos os eventos"}
+      ${
+        vencimentoFocoGlobal
+          ? ` | Vencimento: dia ${vencimentoFocoGlobal}`
+          : ""
+      }
+    </div>
+
+    <div class="print-kpis">
+
+      <div class="print-kpi total">
+        <span class="print-kpi-label">TOTAL</span>
+        <strong>${eventos.length}</strong>
+        <small>Eventos</small>
+      </div>
+
+      <div class="print-kpi bloqueio">
+        <span class="print-kpi-label">BLOQUEIOS</span>
+        <strong>${totalBloqueios}</strong>
+        <small>Ações</small>
+      </div>
+
+      <div class="print-kpi sms">
+        <span class="print-kpi-label">SMS</span>
+        <strong>${totalSMS}</strong>
+        <small>Notificações</small>
+      </div>
+
+      <div class="print-kpi fatura">
+        <span class="print-kpi-label">FATURAS / E-MAILS</span>
+        <strong>${totalFaturas}</strong>
+        <small>Comunicações</small>
+      </div>
+
+      <div class="print-kpi cancelamento">
+        <span class="print-kpi-label">SERASA / CANCEL.</span>
+        <strong>${totalCancelamentos}</strong>
+        <small>Ações</small>
+      </div>
+
+    </div>
+
+    <div class="print-section-title">
+      Cronograma de ações e notificações
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Evento</th>
+          <th>Venc.</th>
+          <th>Descrição</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        ${
+          eventos.length
+            ? eventos
+                .map(
+                  (ev) => `
+                    <tr>
+                      <td class="print-date">
+                        ${ev.dataReal.toLocaleDateString("pt-BR")}
+                      </td>
+
+                      <td class="print-event">
+                        ${ev.tituloRegra}
+                      </td>
+
+                      <td class="print-venc">
+                        ${ev.vencimentoOriginal}
+                      </td>
+
+                      <td>
+                        ${ev.desc}
+                      </td>
+                    </tr>
+                  `
+                )
+                .join("")
+            : `
+              <tr>
+                <td colspan="4" class="print-empty">
+                  Nenhum evento encontrado para os filtros selecionados.
+                </td>
+              </tr>
+            `
+        }
+      </tbody>
+    </table>
+
+    <div class="print-footer">
+      <span>Master | Régua de Cobrança</span>
+      <span>Relatório operacional</span>
+    </div>
+  `;
+
   window.print();
 }
 
