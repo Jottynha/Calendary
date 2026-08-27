@@ -2923,7 +2923,7 @@ body.dark-theme .month-nav-btn:hover {
 
 .notification-panel {
   position: fixed;
-  top: 20px;
+  top: 60px;
   right: 20px;
 
   z-index: 1000;
