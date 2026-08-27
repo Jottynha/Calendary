@@ -1351,7 +1351,7 @@ header .ui-calendar { color: #155eef; }
     width: 120px;
     height: auto;
     position: fixed;
-    top: 10px;      /* Distância do topo */
-    left: 10px;     /* Distância da esquerda */
-    z-index: 1000;  /* Garante que fique acima dos outros elementos */
+    top: 10px;     
+    left: 10px;     
+    z-index: 1000;  
 }
