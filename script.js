@@ -610,6 +610,169 @@ function fecharEditorExcecaoNoModal() {
     limparFormularioExcecao();
 }
 
+// ================================================================
+// SINCRONIZAÇÃO: BLOQUEIO → WHATSAPP
+// O WhatsApp ocorre 1 dia antes do Bloqueio.
+// Só existe para vencimentos 10, 15 e 20.
+// ================================================================
+
+function ehBloqueio(ev) {
+    return ev?.actionKey === "bloqueio_15" ||
+           ev?.tituloRegra === "Bloqueio";
+}
+
+function vencimentoTemWhatsApp(vencimento) {
+    return [10, 15, 20].includes(Number(vencimento));
+}
+
+function somarDiasDataISO(dataISOString, quantidadeDias) {
+    const data = new Date(`${dataISOString}T12:00:00`);
+    data.setDate(data.getDate() + quantidadeDias);
+    return dataISO(data);
+}
+
+async function sincronizarWhatsAppComBloqueio({
+    bloqueioOriginal,
+    bloqueioNovo,
+    vencimento,
+    usuarioId,
+    excecaoBloqueioId = null
+}) {
+    // WhatsApp só existe para estes vencimentos.
+    if (!vencimentoTemWhatsApp(vencimento)) {
+        return {
+            sincronizado: false,
+            motivo: "Este vencimento não possui disparo de WhatsApp."
+        };
+    }
+
+    // WhatsApp = D+14
+    // Bloqueio = D+15
+    // Portanto: WhatsApp = Bloqueio - 1 dia.
+    const whatsappOriginal =
+        somarDiasDataISO(bloqueioOriginal, -1);
+
+    const whatsappNovo =
+        somarDiasDataISO(bloqueioNovo, -1);
+
+    if (whatsappOriginal === whatsappNovo) {
+        return {
+            sincronizado: false,
+            motivo: "A data do WhatsApp não precisou ser alterada."
+        };
+    }
+
+    // Procura uma exceção de WhatsApp que já exista.
+    // Isso é importante caso o WhatsApp já tenha sido alterado anteriormente.
+    const { data: existente, error: buscaError } =
+        await supabaseClient
+            .from("excecoes_calendario")
+            .select("*")
+            .eq("ativo", true)
+            .eq("event_title", "WhatsApp/E-mail")
+            .eq("original_date", whatsappOriginal)
+            .eq("vencimento_original", vencimento)
+            .maybeSingle();
+
+    if (buscaError) {
+        console.error(
+            "Erro procurando exceção de WhatsApp:",
+            buscaError
+        );
+
+        return {
+            sincronizado: false,
+            erro: buscaError
+        };
+    }
+
+    const motivoAutomatico =
+        `🔗 Movido automaticamente devido à alteração do Bloqueio associado (${bloqueioOriginal} → ${bloqueioNovo}).`;
+
+    // Se já existe uma exceção de WhatsApp,
+    // apenas atualiza a nova data.
+    if (existente) {
+
+        const motivoAnterior =
+            existente.motivo || "";
+
+        const motivoFinal =
+            motivoAnterior.includes("🔗 Movido automaticamente")
+                ? motivoAnterior
+                : `${motivoAnterior} | ${motivoAutomatico}`;
+
+        const { error } =
+            await supabaseClient
+                .from("excecoes_calendario")
+                .update({
+                    new_date: whatsappNovo,
+                    motivo: motivoFinal,
+                    ativo: true
+                })
+                .eq("id", existente.id);
+
+        if (error) {
+            console.error(
+                "Erro atualizando WhatsApp associado:",
+                error
+            );
+
+            return {
+                sincronizado: false,
+                erro: error
+            };
+        }
+
+        return {
+            sincronizado: true,
+            atualizado: true,
+            original: whatsappOriginal,
+            novaData: whatsappNovo
+        };
+    }
+
+    // Caso ainda não exista exceção,
+    // cria automaticamente uma.
+    const payloadWhatsApp = {
+        original_date: whatsappOriginal,
+        new_date: whatsappNovo,
+        event_title: "WhatsApp/E-mail",
+        vencimento_original: vencimento,
+        tipo: "pos",
+        categoria: "fatura",
+        descricao:
+            "14 dias após o vencimento - Fatura por WhatsApp e E-mail. " +
+            "Movido automaticamente junto com o Bloqueio associado.",
+        motivo: motivoAutomatico,
+        ativo: true,
+        created_by: usuarioId
+    };
+
+    const { error: insertError } =
+        await supabaseClient
+            .from("excecoes_calendario")
+            .insert(payloadWhatsApp);
+
+    if (insertError) {
+        console.error(
+            "Erro criando exceção automática de WhatsApp:",
+            insertError
+        );
+
+        return {
+            sincronizado: false,
+            erro: insertError
+        };
+    }
+
+    return {
+        sincronizado: true,
+        criado: true,
+        original: whatsappOriginal,
+        novaData: whatsappNovo
+    };
+}
+
 async function salvarExcecaoDoModal() {
     if (!supabaseClient || !ehAdmin || !usuarioAdmin) return;
 
@@ -661,6 +824,43 @@ async function salvarExcecaoDoModal() {
         console.error(result.error);
         status.textContent = "Não foi possível salvar a alteração.";
         return;
+    }
+
+    // ================================================================
+    // SE FOR BLOQUEIO, MOVE O WHATSAPP ASSOCIADO AUTOMATICAMENTE
+    // ================================================================
+
+    let resultadoWhatsApp = null;
+
+    if (
+        titulo === "Bloqueio" &&
+        venc &&
+        vencimentoTemWhatsApp(venc)
+    ) {
+        resultadoWhatsApp =
+            await sincronizarWhatsAppComBloqueio({
+                bloqueioOriginal: original,
+                bloqueioNovo: nova,
+                vencimento: Number(venc),
+                usuarioId: usuarioAdmin.id,
+                excecaoBloqueioId: exceptionId || null
+            });
+
+        if (resultadoWhatsApp?.erro) {
+            status.textContent =
+                "⚠️ Bloqueio alterado, mas houve erro ao mover o WhatsApp. Verifique o histórico.";
+
+            console.error(
+                "Bloqueio salvo, mas WhatsApp não foi sincronizado:",
+                resultadoWhatsApp.erro
+            );
+
+            await carregarExcecoes();
+            renderizarTudo();
+            renderizarAdmin();
+
+            return;
+        }
     }
 
     status.textContent = "Alteração salva. Atualizando calendário...";
@@ -728,6 +928,36 @@ async function salvarExcecao() {
         console.error(error);
         status.textContent = "Erro ao salvar a exceção.";
         return;
+    }
+
+    // ================================================================
+    // SINCRONIZAR WHATSAPP QUANDO O BLOQUEIO FOR ALTERADO
+    // ================================================================
+
+    if (
+        titulo === "Bloqueio" &&
+        venc &&
+        vencimentoTemWhatsApp(venc)
+    ) {
+        const resultadoWhatsApp =
+            await sincronizarWhatsAppComBloqueio({
+                bloqueioOriginal: original,
+                bloqueioNovo: nova,
+                vencimento: Number(venc),
+                usuarioId: usuarioAdmin.id
+            });
+
+        if (resultadoWhatsApp?.erro) {
+            status.textContent =
+                "⚠️ Bloqueio salvo, mas não foi possível mover o WhatsApp.";
+
+            console.error(
+                "Erro na sincronização do WhatsApp:",
+                resultadoWhatsApp.erro
+            );
+
+            return;
+        }
     }
 
     status.textContent = "Exceção salva. Atualizando calendário...";
