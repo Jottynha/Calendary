@@ -609,6 +609,42 @@ function mudarMesAno() {
   renderizarTudo();
 }
 
+function mudarMes(direcao) {
+    let mes = parseInt(document.getElementById("selectMes").value);
+    let ano = parseInt(document.getElementById("selectAno").value);
+
+    const novaData = new Date(ano, mes + direcao, 1);
+
+    const novoMes = novaData.getMonth();
+    const novoAno = novaData.getFullYear();
+
+    document.getElementById("selectMes").value = novoMes;
+    document.getElementById("selectAno").value = novoAno;
+
+    mudarMesAno();
+
+    atualizarLabelMes();
+}
+
+function atualizarLabelMes() {
+    const mes = parseInt(document.getElementById("selectMes").value);
+    const ano = parseInt(document.getElementById("selectAno").value);
+
+    const data = new Date(ano, mes, 1);
+
+    const texto = data.toLocaleDateString("pt-BR", {
+        month: "long",
+        year: "numeric"
+    });
+
+    const label = document.getElementById("calendarMonthLabel");
+
+    if (label) {
+        label.textContent =
+            texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+}
+
 function mudarFiltroVencimento() {
   vencimentoFocoGlobal = document.getElementById("selectFiltroVencimento").value
     ? parseInt(document.getElementById("selectFiltroVencimento").value)

@@ -2782,3 +2782,137 @@ body.dark-theme .feedback-btn:hover {
   color: #93c5fd;
   border-color: #3b82f6;
 }
+
+/* =========================================================
+   NAVEGAÇÃO DO CALENDÁRIO
+   ========================================================= */
+
+.calendar-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    background: #ffffff;
+    border: 1px solid #dbe5f0;
+    border-radius: 14px;
+
+    padding: 10px 14px;
+    margin-bottom: 10px;
+
+    box-shadow: 0 3px 12px rgba(20, 42, 74, .04);
+}
+
+
+/* Nome do mês */
+
+.calendar-month-label {
+    min-width: 150px;
+
+    text-align: center;
+
+    color: #102a56;
+
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+
+/* Botões */
+
+.month-nav-btn {
+    width: 36px;
+    height: 36px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #cbd7e5;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #155eef;
+
+    font-size: 1.25rem;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.month-nav-btn:hover {
+    background: #eef4ff;
+    border-color: #9dbcf2;
+    color: #0d4dcc;
+
+    transform: translateY(-1px);
+
+    box-shadow: 0 3px 8px rgba(21, 94, 239, .10);
+}
+
+.month-nav-btn:active {
+    transform: translateY(0);
+}
+
+.month-nav-btn:focus-visible {
+    outline: 2px solid #155eef;
+    outline-offset: 2px;
+}
+
+/* =========================================================
+   NAVEGAÇÃO DO CALENDÁRIO — MODO ESCURO
+   ========================================================= */
+
+body.dark-theme .calendar-navigation {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 5px 18px rgba(0, 0, 0, .20);
+}
+
+body.dark-theme .calendar-month-label {
+    color: var(--text-primary);
+}
+
+body.dark-theme .month-nav-btn {
+    background: #111827;
+    color: #60a5fa;
+    border-color: var(--border-color);
+}
+
+body.dark-theme .month-nav-btn:hover {
+    background: #1e3a5f;
+    border-color: #3b82f6;
+    color: #93c5fd;
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+
+@media (max-width: 560px) {
+    .date-navigation {
+        width: 100%;
+    }
+
+    .date-selectors {
+        flex: 1;
+    }
+
+    .date-selectors select {
+        flex: 1;
+    }
+
+    .month-nav-btn {
+        width: 40px;
+        min-width: 40px;
+    }
+}

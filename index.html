@@ -84,6 +84,11 @@
       </div>
       <!--  FILTROS E CONTROLES -->
       <div class="controls-panel">
+        <!-- Seleção de mês/ano -->
+        <div class="date-selectors">
+          <select id="selectMes" onchange="mudarMesAno()"></select>
+          <select id="selectAno" onchange="mudarMesAno()"></select>
+        </div>
         <!-- Filtro por vencimento -->
         <div class="config-group">
           <label for="selectFiltroVencimento">
@@ -118,11 +123,8 @@
             <option value="relatorio">Relatórios Operacionais</option>
           </select>
         </div>
-        <!-- Seleção de mês/ano -->
-        <div class="date-selectors">
-          <select id="selectMes" onchange="mudarMesAno()"></select>
-          <select id="selectAno" onchange="mudarMesAno()"></select>
-        </div>
+        <!-- Navegação e seleção de mês/ano -->
+        
         <!-- Alternância de layout -->
         <button id="btnToggleLayout" class="btn-toggle-layout" onclick="alternarLayout()">
           <span class="ui-icon ui-layout" aria-hidden="true"> ▦ </span>
@@ -201,6 +203,37 @@
           Relatórios
         </div>
       </div>
+      <!-- NAVEGAÇÃO DO CALENDÁRIO -->
+      <div class="calendar-navigation">
+
+        <button
+          type="button"
+          class="month-nav-btn"
+          onclick="mudarMes(-1)"
+          aria-label="Mês anterior"
+          title="Mês anterior"
+        >
+          ←
+        </button>
+
+        <div class="calendar-month-label">
+          <span id="calendarMonthLabel"></span>
+        </div>
+
+        <button
+          type="button"
+          class="month-nav-btn"
+          onclick="mudarMes(1)"
+          aria-label="Próximo mês"
+          title="Próximo mês"
+        >
+          →
+        </button>
+
+      </div>
+
+<!-- CALENDÁRIO -->
+<div id="calendarView">
       <!--CALENDÁRIO-->
       <div id="calendarView">
         <div class="calendar-grid-header">
