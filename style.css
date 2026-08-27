@@ -2,14 +2,28 @@
    1. VARIÁVEIS E BASE
    ========================================================================= */
 :root {
-    --bg-color: #0b0f19;
-    --card-bg: #111827;
+    --page-bg: #f4f7fb;
     --panel-bg: #0f172a;
     --border-color: #1f2937;
     --text-main: #f3f4f6;
-    --text-muted: #9ca3af;
+     --text-primary: #172033;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
     --accent-blue: #3b82f6;
     --hover-bg: #1e293b;
+    --accent-color: #f5c400;
+    --primary-color: #0057b8;
+    --primary-hover: #00458f;
+    --bg-color: #f4f7fb;
+    --card-bg: #ffffff;
+    --panel-bg: #f8fafc;
+    --border-color: #d9e2ec;
+    --text-main: #172033;
+    --text-muted: #64748b;
+    --accent-blue: #155eef;
+    --accent-blue-dark: #0b3fa8;
+    --brand-yellow: #f5c400;
+    --hover-bg: #eef4ff;
     
     /* Paleta de Cores de Eventos */
     --color-ante: #6366f1;
@@ -24,10 +38,14 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: var(--bg-color);
     color: var(--text-main);
     margin: 0;
     padding: 20px;
+    background: radial-gradient(circle at 8% 0%, rgba(21,94,239,.07), transparent 28%),
+            radial-gradient(circle at 95% 8%, rgba(245,196,0,.10), transparent 22%),
+            var(--bg-color);
+    color: var(--text-main);
+    padding: 24px;
 }
 
 .container {
@@ -1035,26 +1053,7 @@ p.subtitle {
 /* ========================================================================
    10. IDENTIDADE VISUAL — MASTER
    ======================================================================== */
-:root {
-    --bg-color: #f4f7fb;
-    --card-bg: #ffffff;
-    --panel-bg: #f8fafc;
-    --border-color: #d9e2ec;
-    --text-main: #172033;
-    --text-muted: #64748b;
-    --accent-blue: #155eef;
-    --accent-blue-dark: #0b3fa8;
-    --brand-yellow: #f5c400;
-    --hover-bg: #eef4ff;
-}
 
-body {
-    background: radial-gradient(circle at 8% 0%, rgba(21,94,239,.07), transparent 28%),
-                radial-gradient(circle at 95% 8%, rgba(245,196,0,.10), transparent 22%),
-                var(--bg-color);
-    color: var(--text-main);
-    padding: 24px;
-}
 
 .container {
     max-width: 1180px;
@@ -1354,4 +1353,703 @@ header .ui-calendar { color: #155eef; }
     top: 10px;     
     left: 10px;     
     z-index: 1000;  
+}
+
+.theme-toggle {
+    position: fixed;
+    top: 55px;     
+    left: 10px;     
+    z-index: 1000;  
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 9px 14px;
+
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-1px);
+    border-color: var(--primary-color);
+}
+
+#themeIcon {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+/* =========================================================
+   TEMA ESCURO — SOBRESCRITA COMPLETA
+   Deve ficar NO FINAL do CSS
+   ========================================================= */
+
+body.dark-theme {
+    --bg-color: #0b1120;
+    --page-bg: #0b1120;
+
+    --card-bg: #111827;
+    --card-bg-secondary: #172033;
+    --panel-bg: #0f172a;
+
+    --border-color: #263449;
+
+    --text-main: #f1f5f9;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    --hover-bg: #1e293b;
+
+    --accent-blue: #3b82f6;
+    --accent-blue-dark: #2563eb;
+
+    --primary-color: #3b82f6;
+    --primary-hover: #60a5fa;
+
+    --accent-color: #facc15;
+    --brand-yellow: #facc15;
+
+    background: var(--bg-color);
+    color: var(--text-main);
+}
+
+
+/* =========================================================
+   ESTRUTURA PRINCIPAL
+   ========================================================= */
+
+body.dark-theme .container {
+    background: #111827;
+    border-color: #263449;
+    color: var(--text-main);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, .35);
+}
+
+body.dark-theme h1 {
+    color: #f8fafc;
+}
+
+body.dark-theme p.subtitle {
+    color: #94a3b8;
+}
+
+body.dark-theme .info-hoje {
+    color: #60a5fa;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+body.dark-theme header::before {
+    background: linear-gradient(
+        180deg,
+        #3b82f6,
+        #facc15
+    );
+}
+
+
+/* =========================================================
+   AÇÕES DE HOJE
+   ========================================================= */
+
+body.dark-theme .today-actions-panel {
+    background: linear-gradient(
+        135deg,
+        #0f172a 0%,
+        #172554 100%
+    );
+
+    border: 1px solid #263d68;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .25);
+}
+
+body.dark-theme .today-actions-panel h3 {
+    color: #dbeafe;
+}
+
+body.dark-theme .today-action-item {
+    background: rgba(255,255,255,.05);
+    border-color: rgba(148,163,184,.18);
+}
+
+body.dark-theme .today-action-text {
+    color: #f1f5f9;
+}
+
+
+/* =========================================================
+   PAINÉIS / DASHBOARD
+   ========================================================= */
+
+body.dark-theme .dashboard-section,
+body.dark-theme .controls-panel,
+body.dark-theme .alternate-view,
+body.dark-theme .legenda-container {
+    background: #0f172a;
+    border-color: #263449;
+}
+
+body.dark-theme .dashboard-heading h3 {
+    color: #f8fafc;
+}
+
+body.dark-theme .dashboard-heading p {
+    color: #94a3b8;
+}
+
+body.dark-theme .dashboard-period-label {
+    color: #60a5fa;
+}
+
+
+/* =========================================================
+   KPIs
+   ========================================================= */
+
+body.dark-theme .kpi-card {
+    background: #111827;
+    border-color: #263449;
+    color: #f1f5f9;
+    box-shadow: 0 4px 15px rgba(0,0,0,.20);
+}
+
+body.dark-theme .kpi-card:hover {
+    border-color: #3b82f6;
+}
+
+body.dark-theme .kpi-card strong {
+    color: #f8fafc;
+}
+
+body.dark-theme .kpi-card small {
+    color: #cbd5e1;
+}
+
+body.dark-theme .kpi-card-content strong {
+    color: #f8fafc;
+}
+
+body.dark-theme .kpi-card-content small {
+    color: #cbd5e1;
+}
+
+body.dark-theme .kpi-card-content em {
+    color: #94a3b8;
+}
+
+body.dark-theme .total-kpi {
+    border-color: #334155;
+}
+
+
+/* KPI selecionado */
+
+body.dark-theme .action-kpi.dashboard-selected {
+    background: rgba(37,99,235,.16);
+    border-color: #3b82f6;
+
+    box-shadow:
+        0 0 0 2px rgba(59,130,246,.25),
+        0 10px 22px rgba(59,130,246,.12);
+}
+
+
+/* =========================================================
+   ÍCONES KPI
+   ========================================================= */
+
+body.dark-theme .kpi-icon {
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.15);
+}
+
+
+/* =========================================================
+   CONTROLES / SELECTS / INPUTS
+   ========================================================= */
+
+body.dark-theme .config-group label {
+    color: #94a3b8;
+}
+
+body.dark-theme .config-group select,
+body.dark-theme .date-selectors select,
+body.dark-theme .admin-modal input,
+body.dark-theme .admin-modal select,
+body.dark-theme input,
+body.dark-theme select,
+body.dark-theme textarea {
+    background: #0b1220;
+    color: #f1f5f9;
+    border-color: #334155;
+}
+
+body.dark-theme .config-group select:focus,
+body.dark-theme .date-selectors select:focus,
+body.dark-theme .admin-modal input:focus,
+body.dark-theme .admin-modal select:focus {
+    border-color: #3b82f6;
+
+    box-shadow:
+        0 0 0 3px rgba(59,130,246,.15);
+}
+
+body.dark-theme input::placeholder,
+body.dark-theme textarea::placeholder {
+    color: #64748b;
+}
+
+
+/* =========================================================
+   BOTÃO ALTERAR LAYOUT
+   ========================================================= */
+
+body.dark-theme .btn-toggle-layout {
+    background: #172554;
+    color: #bfdbfe;
+    border-color: #3158a8;
+}
+
+body.dark-theme .btn-toggle-layout:hover {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+}
+
+body.dark-theme .btn-toggle-layout.enxuto-active {
+    background: #422006;
+    border-color: #d97706;
+    color: #fde68a;
+}
+
+
+/* =========================================================
+   ABAS / EXPORTAÇÃO / ADMIN
+   ========================================================= */
+
+body.dark-theme .view-tab,
+body.dark-theme .export-btn,
+body.dark-theme .btn-admin,
+body.dark-theme .admin-secondary {
+    background: #111827;
+    color: #cbd5e1;
+    border-color: #334155;
+}
+
+body.dark-theme .view-tab:hover,
+body.dark-theme .export-btn:hover,
+body.dark-theme .btn-admin:hover,
+body.dark-theme .admin-secondary:hover {
+    background: #1e293b;
+    color: #f8fafc;
+    border-color: #475569;
+}
+
+body.dark-theme .view-tab.active {
+    background: #2563eb;
+    border-color: #3b82f6;
+    color: #fff;
+}
+
+body.dark-theme .export-btn.csv {
+    border-color: #166534;
+    color: #86efac;
+}
+
+body.dark-theme .export-btn.pdf {
+    border-color: #9f1239;
+    color: #fda4af;
+}
+
+body.dark-theme .export-btn.guide {
+    border-color: #6d28d9;
+    color: #ddd6fe;
+}
+
+
+/* =========================================================
+   LEGENDA
+   ========================================================= */
+
+body.dark-theme .legenda-container {
+    background: #0f172a;
+    border-color: #263449;
+}
+
+body.dark-theme .legenda-item {
+    color: #94a3b8;
+}
+
+
+/* =========================================================
+   CALENDÁRIO
+   ========================================================= */
+
+body.dark-theme .calendar-grid-header {
+    background: #172033;
+    color: #cbd5e1;
+    border-color: #263449;
+}
+
+body.dark-theme .calendar-grid {
+    background: #263449;
+    border-color: #263449;
+}
+
+body.dark-theme .calendar-day {
+    background: #111827;
+    color: #f1f5f9;
+}
+
+body.dark-theme .calendar-day:hover {
+    background: #1e293b;
+}
+
+body.dark-theme .calendar-day.other-month {
+    background: #0d1422;
+    color: #64748b;
+}
+
+body.dark-theme .calendar-day.hoje {
+    border-color: #facc15;
+}
+
+body.dark-theme .calendar-day.focused {
+    background: #172554;
+    border-color: #3b82f6;
+
+    box-shadow:
+        inset 0 0 0 1px rgba(59,130,246,.20);
+}
+
+body.dark-theme .event-count,
+body.dark-theme .more-dots {
+    color: #94a3b8;
+}
+
+
+/* =========================================================
+   VISÕES LISTA / TIMELINE
+   ========================================================= */
+
+body.dark-theme .view-heading {
+    border-color: #263449;
+}
+
+body.dark-theme .view-heading h3 {
+    color: #f8fafc;
+}
+
+body.dark-theme .view-heading span {
+    color: #94a3b8;
+}
+
+body.dark-theme .list-event {
+    border-color: #263449;
+}
+
+body.dark-theme .list-date strong {
+    color: #60a5fa;
+}
+
+body.dark-theme .list-date small {
+    color: #94a3b8;
+}
+
+body.dark-theme .timeline-group::before {
+    background: #334155;
+}
+
+body.dark-theme .timeline-date {
+    color: #60a5fa;
+}
+
+body.dark-theme .timeline-events .list-event {
+    background: #111827;
+    border-color: #263449;
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+body.dark-theme .modal-overlay {
+    background: rgba(0,0,0,.72);
+}
+
+body.dark-theme .modal-content {
+    background: #111827;
+    border-color: #334155;
+    color: #f1f5f9;
+
+    box-shadow:
+        0 24px 60px rgba(0,0,0,.55);
+}
+
+body.dark-theme .modal-header {
+    border-color: #263449;
+}
+
+body.dark-theme .modal-header h3 {
+    color: #f8fafc;
+}
+
+body.dark-theme .modal-close {
+    color: #94a3b8;
+}
+
+body.dark-theme .modal-close:hover {
+    background: #1e293b;
+    color: #f8fafc;
+}
+
+body.dark-theme .modal-events-list li {
+    border-color: #263449;
+}
+
+body.dark-theme .event-info {
+    color: #f1f5f9;
+}
+
+body.dark-theme .event-info strong {
+    color: #60a5fa;
+}
+
+body.dark-theme .event-info p {
+    color: #94a3b8;
+}
+
+
+/* =========================================================
+   EDITOR DE EXCEÇÕES
+   ========================================================= */
+
+body.dark-theme .modal-exception-editor {
+    background: #0f172a;
+    border-color: #3730a3;
+}
+
+body.dark-theme .modal-editor-header h4 {
+    color: #f8fafc;
+}
+
+body.dark-theme .modal-editor-header p {
+    color: #94a3b8;
+}
+
+body.dark-theme .modal-exception-editor label {
+    color: #94a3b8;
+}
+
+body.dark-theme .modal-exception-editor input {
+    background: #111827;
+    color: #f1f5f9;
+    border-color: #334155;
+}
+
+body.dark-theme .modal-edit-btn {
+    background: #172554;
+    color: #bfdbfe;
+    border-color: #4f46e5;
+}
+
+body.dark-theme .modal-edit-btn:hover {
+    background: #1e3a8a;
+}
+
+body.dark-theme .modal-editor-close {
+    background: #111827;
+    color: #94a3b8;
+    border-color: #334155;
+}
+
+body.dark-theme .exception-note {
+    color: #fbbf24 !important;
+}
+
+
+/* =========================================================
+   ADMINISTRAÇÃO
+   ========================================================= */
+
+body.dark-theme .admin-modal label {
+    color: #94a3b8;
+}
+
+body.dark-theme .admin-help {
+    color: #94a3b8;
+}
+
+body.dark-theme .admin-session,
+body.dark-theme .exception-form,
+body.dark-theme .exception-history,
+body.dark-theme .guide-panel {
+    background: #0f172a;
+    border-color: #263449;
+}
+
+body.dark-theme .admin-section-title {
+    color: #f8fafc;
+}
+
+body.dark-theme .admin-row {
+    border-color: #263449;
+}
+
+body.dark-theme .admin-row strong {
+    color: #f1f5f9;
+}
+
+body.dark-theme .admin-row span {
+    color: #60a5fa;
+}
+
+body.dark-theme .admin-row small {
+    color: #94a3b8;
+}
+
+body.dark-theme .admin-empty {
+    color: #64748b;
+}
+
+body.dark-theme .admin-primary {
+    background: #2563eb;
+    border-color: #3b82f6;
+    color: #fff;
+}
+
+body.dark-theme .admin-primary:hover {
+    background: #1d4ed8;
+}
+
+body.dark-theme .danger-btn {
+    background: #450a0a;
+    color: #fecaca;
+    border-color: #7f1d1d;
+}
+
+
+/* =========================================================
+   FILTRO DO DASHBOARD
+   ========================================================= */
+
+body.dark-theme .dashboard-action-filter {
+    background: rgba(37,99,235,.14);
+    border-color: rgba(59,130,246,.45);
+    color: #cbd5e1;
+}
+
+body.dark-theme .dashboard-action-filter strong {
+    color: #60a5fa;
+}
+
+body.dark-theme .dashboard-action-filter button {
+    background: #172033;
+    color: #93c5fd;
+    border-color: #3b82f6;
+}
+
+body.dark-theme .dashboard-action-filter button:hover {
+    background: #1e3a8a;
+    color: #dbeafe;
+}
+
+
+/* =========================================================
+   GUIDE PANEL
+   ========================================================= */
+
+body.dark-theme .guide-panel {
+    background: #0b1220;
+}
+
+body.dark-theme .guide-panel p {
+    color: #94a3b8;
+}
+
+
+/* =========================================================
+   BOTÃO DE TEMA
+   ========================================================= */
+
+body.dark-theme .theme-toggle {
+    background: #111827;
+    color: #f1f5f9;
+    border-color: #334155;
+}
+
+body.dark-theme .theme-toggle:hover {
+    background: #1e293b;
+    border-color: #3b82f6;
+}
+
+
+/* =========================================================
+   ÍCONES DE INTERFACE
+   ========================================================= */
+
+body.dark-theme .ui-alert {
+    background: rgba(250,204,21,.15);
+    color: #facc15;
+}
+
+body.dark-theme header .ui-calendar {
+    color: #60a5fa;
+}
+
+
+/* =========================================================
+   NOTIFICAÇÕES
+   ========================================================= */
+
+body.dark-theme .notification-status {
+    color: #94a3b8;
+}
+
+body.dark-theme #btnNotificacoes.notification-active {
+    border-color: #16a34a;
+    color: #86efac;
+    background: #052e16;
+}
+
+
+/* =========================================================
+   SCROLLBAR — OPCIONAL
+   ========================================================= */
+
+body.dark-theme ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+body.dark-theme ::-webkit-scrollbar-track {
+    background: #0b1120;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
 }

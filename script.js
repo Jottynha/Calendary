@@ -1814,3 +1814,48 @@ function formatarVencimentoCompleto(ev) {
 
     return formatarDataCompleta(dataVencimento);
 }
+
+function alternarTema() {
+    const body = document.body;
+    const modoEscuro = body.classList.toggle("dark-theme");
+
+    localStorage.setItem(
+        "temaCalendario",
+        modoEscuro ? "dark" : "light"
+    );
+
+    atualizarBotaoTema();
+}
+
+
+function atualizarBotaoTema() {
+    const body = document.body;
+    const icon = document.getElementById("themeIcon");
+    const text = document.getElementById("themeText");
+
+    if (!icon || !text) return;
+
+    if (body.classList.contains("dark-theme")) {
+        icon.textContent = "☀";
+        text.textContent = "Modo claro";
+    } else {
+        icon.textContent = "☾";
+        text.textContent = "Modo escuro";
+    }
+}
+
+
+function carregarTema() {
+    const temaSalvo = localStorage.getItem("temaCalendario");
+
+    if (temaSalvo === "dark") {
+        document.body.classList.add("dark-theme");
+    }
+
+    atualizarBotaoTema();
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    carregarTema();
+});
