@@ -6,7 +6,6 @@
    A chave "anon" é própria para uso no navegador; a segurança fica nas
    políticas RLS do banco (arquivo supabase.sql).
    ========================================================================= 
-   M@sterCobranca26
    */
 const SUPABASE_URL = "https://uoyhnbjuihovbsdaitnj.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_rbpCapogsFPP3KlUDwFIcw_4ybwnwuJ";

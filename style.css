@@ -2053,3 +2053,61 @@ body.dark-theme ::-webkit-scrollbar-thumb {
 body.dark-theme ::-webkit-scrollbar-thumb:hover {
     background: #475569;
 }
+
+/* =========================================================
+   BOTÃO DE FEEDBACK
+   ========================================================= */
+
+.feedback-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 105px;     
+    left: 10px;     
+    z-index: 1000;  
+
+    padding: 8px 13px;
+
+    background: #fff;
+    color: #475569;
+
+    border: 1px solid #cbd7e5;
+    border-radius: 8px;
+
+    font-size: 0.78rem;
+    font-weight: 600;
+
+    text-decoration: none;
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        transform .2s ease;
+}
+
+.feedback-btn:hover {
+    background: #eef4ff;
+    color: #1248a3;
+    border-color: #9dbcf2;
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   FEEDBACK — TEMA ESCURO
+   ========================================================= */
+
+body.dark-theme .feedback-btn {
+    background: #111827;
+    color: #cbd5e1;
+    border-color: #334155;
+}
+
+body.dark-theme .feedback-btn:hover {
+    background: #1e293b;
+    color: #93c5fd;
+    border-color: #3b82f6;
+}

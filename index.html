@@ -1,1082 +1,382 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Master | Régua de Cobrança</title>
-
-    <link rel="stylesheet" href="style.css">
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Master [Régua de Cobrança]</title>
+    <link rel="stylesheet" href="style.css" />
     <!-- Ícone do site -->
-    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="img/icon-192.png">
-</head>
-
-<body>
-<div class="brand-header">
-    <img
-        src="img/LOGO MASTER.png"
-        alt="Master"
-        class="master-logo"
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="img/icon-192.png" />
+  </head>
+  <body>
+    <div class="brand-header">
+      <img src="img/LOGO MASTER.png" alt="Master" class="master-logo" />
+    </div>
+    <button
+      id="btnTema"
+      class="theme-toggle"
+      onclick="alternarTema()"
+      type="button"
+      aria-label="Alternar tema"
+      title="Alternar tema"
     >
-</div>
-
-<button
-    id="btnTema"
-    class="theme-toggle"
-    onclick="alternarTema()"
-    type="button"
-    aria-label="Alternar tema"
-    title="Alternar tema"
->
-    <span id="themeIcon">☾</span>
-    <span id="themeText">Modo escuro</span>
-</button>
-
-<div class="container">
-
-    <!-- =====================================================
-         CABEÇALHO
-         ===================================================== -->
-
-    <header>
+      <span id="themeIcon">☾</span>
+      <span id="themeText">Modo escuro</span>
+    </button>
+    <a
+      class="feedback-btn"
+      href="https://github.com/Jottynha"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      💬 Contato
+    </a>
+    <div class="container">
+      <!-- CABEÇALHO -->
+      <header>
         <h1>Master | Régua de Cobrança</h1>
-
-        <p class="subtitle">
-            Simulador e Calendário Operacional Dinâmico
-        </p>
-
+        <p class="subtitle">Simulador e Calendário Operacional Dinâmico</p>
         <div id="infoHoje" class="info-hoje">
-            <span class="ui-icon ui-calendar" aria-hidden="true">▣</span>
-            Hoje é: Carregando...
+          <span class="ui-icon ui-calendar" aria-hidden="true">▣</span>
+          Hoje é: Carregando...
         </div>
-    </header>
-
-
-    <!-- =====================================================
-         AÇÕES NECESSÁRIAS PARA HOJE
-         ===================================================== -->
-
-    <div class="today-actions-panel">
-
+      </header>
+      <!-- AÇÕES NECESSÁRIAS PARA HOJE -->
+      <div class="today-actions-panel">
         <h3>
-            <span class="ui-icon ui-alert" aria-hidden="true">!</span>
-            Ações Necessárias para Hoje
+          <span class="ui-icon ui-alert" aria-hidden="true">!</span>
+          Ações Necessárias para Hoje
         </h3>
-
-        <div
-            id="todayActionsContent"
-            class="today-actions-body"
-        >
-            Carregando ações de hoje...
+        <div id="todayActionsContent" class="today-actions-body">
+          Carregando ações de hoje...
         </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         DASHBOARD DE AÇÕES INDIVIDUAIS
-         ===================================================== -->
-
-    <div class="dashboard-section">
-
+      </div>
+      <!-- DASHBOARD DE AÇÕES INDIVIDUAIS -->
+      <div class="dashboard-section">
         <div class="dashboard-heading">
-
-            <div>
-
-                <h3>
-                    <span
-                        class="ui-icon ui-chart"
-                        aria-hidden="true"
-                    >
-                        ▥
-                    </span>
-
-                    Ações individuais do período
-                </h3>
-
-                <p>
-                    Quantidades separadas por ação,
-                    respeitando os filtros e o modo de visualização.
-                </p>
-
-            </div>
-
-            <span
-                id="dashboardPeriodLabel"
-                class="dashboard-period-label"
-            ></span>
-
-        </div>
-
-        <div
-            class="kpi-panel"
-            id="kpiPanel"
-        ></div>
-
-    </div>
-
-
-    <!-- =====================================================
-         FILTRO GLOBAL DO DASHBOARD
-         ===================================================== -->
-
-    <div
-        id="dashboardFilter"
-        class="dashboard-action-filter hidden"
-    >
-
-        <span>
-
-            <span
-                class="ui-icon"
-                aria-hidden="true"
-            >
-                ⌕
-            </span>
-
-            Filtro ativo:
-
-            <strong id="dashboardFilterName"></strong>
-
-        </span>
-
-        <button
-            type="button"
-            onclick="limparFiltrosDashboard()"
-        >
-            Limpar filtros
-        </button>
-
-    </div>
-
-
-    <!-- =====================================================
-         FILTROS E CONTROLES
-         ===================================================== -->
-
-    <div class="controls-panel">
-
-
-        <!-- Filtro por vencimento -->
-
-        <div class="config-group">
-
-            <label for="selectFiltroVencimento">
-
-                <span
-                    class="ui-icon ui-target"
-                    aria-hidden="true"
-                >
-                    ◎
-                </span>
-
-                Focar Vencimento:
-
-            </label>
-
-            <select
-                id="selectFiltroVencimento"
-                onchange="mudarFiltroVencimento()"
-            >
-
-                <option value="">
-                    -- Todos os Vencimentos --
-                </option>
-
-                <option value="5">Dia 05</option>
-                <option value="8">Dia 08</option>
-                <option value="10">Dia 10</option>
-                <option value="12">Dia 12</option>
-                <option value="14">Dia 14</option>
-                <option value="15">Dia 15 (Principal)</option>
-                <option value="20">Dia 20</option>
-                <option value="25">Dia 25</option>
-                <option value="26">Dia 26</option>
-
-            </select>
-
-        </div>
-
-
-        <!-- Filtro por tipo -->
-
-        <div class="config-group">
-
-            <label for="selectFiltroTipo">
-
-                <span
-                    class="ui-icon ui-search"
-                    aria-hidden="true"
-                >
-                    ⌕
-                </span>
-
-                Filtrar Evento:
-
-            </label>
-
-            <select
-                id="selectFiltroTipo"
-                onchange="mudarFiltroTipo()"
-            >
-
-                <option value="">
-                    Todos os tipos
-                </option>
-
-                <option value="fatura">
-                    Faturas / E-mails / Faturamentos
-                </option>
-
-                <option value="bloqueio">
-                    Bloqueios
-                </option>
-
-                <option value="sms">
-                    SMS
-                </option>
-
-                <option value="cancelamento">
-                    Cancelamento / Serasa / Corte
-                </option>
-
-                <option value="relatorio">
-                    Relatórios Operacionais
-                </option>
-
-            </select>
-
-        </div>
-
-
-        <!-- Seleção de mês/ano -->
-
-        <div class="date-selectors">
-
-            <select
-                id="selectMes"
-                onchange="mudarMesAno()"
-            ></select>
-
-            <select
-                id="selectAno"
-                onchange="mudarMesAno()"
-            ></select>
-
-        </div>
-
-
-        <!-- Alternância de layout -->
-
-        <button
-            id="btnToggleLayout"
-            class="btn-toggle-layout"
-            onclick="alternarLayout()"
-        >
-
-            <span
-                class="ui-icon ui-layout"
-                aria-hidden="true"
-            >
-                ▦
-            </span>
-
-            Modo Atual:
-
-            <strong>
-                Layout Completo
-            </strong>
-
-            (Clique p/ Enxuta)
-
-        </button>
-
-
-        <!-- Notificações -->
-
-        <button
-            id="btnNotificacoes"
-            class="btn-admin"
-            onclick="solicitarNotificacoes()"
-        >
-
-            <span
-                class="ui-icon ui-bell"
-                aria-hidden="true"
-            >
-                •
-            </span>
-
-            Ativar notificações
-
-        </button>
-
-
-        <!-- Administração -->
-
-        <button
-            id="btnAdmin"
-            class="btn-admin"
-            onclick="abrirLoginAdmin()"
-        >
-
-            <span
-                class="ui-icon ui-lock"
-                aria-hidden="true"
-            >
-                ⌑
-            </span>
-
-            Administração
-
-        </button>
-
-
-        <span
-            id="notificationStatus"
-            class="notification-status"
-            aria-live="polite"
-        ></span>
-
-    </div>
-
-
-    <!-- =====================================================
-         BARRA DE FERRAMENTAS
-         ===================================================== -->
-
-    <div class="actions-toolbar">
-
-
-        <!-- Modos de visualização -->
-
-        <div class="view-tabs">
-
-            <button
-                id="btnCalendario"
-                class="view-tab active"
-                onclick="mudarVisualizacao('calendario')"
-            >
-
-                <span class="ui-icon">
-                    ▦
-                </span>
-
-                Calendário
-
-            </button>
-
-
-            <button
-                id="btnLista"
-                class="view-tab"
-                onclick="mudarVisualizacao('lista')"
-            >
-
-                <span class="ui-icon">
-                    ☷
-                </span>
-
-                Modo Lista
-
-            </button>
-
-
-            <button
-                id="btnTimeline"
-                class="view-tab"
-                onclick="mudarVisualizacao('timeline')"
-            >
-
-                <span class="ui-icon">
-                    ◉
-                </span>
-
-                Timeline
-
-            </button>
-
-        </div>
-
-
-        <!-- Exportações -->
-
-        <div class="export-actions">
-
-            <button
-                class="export-btn csv"
-                onclick="exportarCSV()"
-            >
-
-                <span class="ui-icon">
-                    ↓
-                </span>
-
-                Exportar CSV
-
-            </button>
-
-
-            <button
-                class="export-btn pdf"
-                onclick="exportarPDF()"
-            >
-
-                <span class="ui-icon">
-                    ▤
-                </span>
-
-                Exportar PDF
-
-            </button>
-
-
-            <button
-                class="export-btn guide"
-                onclick="baixarGuiaCalendario()"
-            >
-
-                <span class="ui-icon">
-                    ▧
-                </span>
-
-                Guia do calendário
-
-            </button>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         LEGENDA
-         ===================================================== -->
-
-    <div class="legenda-container">
-
-        <div class="legenda-item">
-
-            <span class="legenda-cor ante"></span>
-
-            -10 Dias
-
-        </div>
-
-
-        <div class="legenda-item">
-
-            <span class="legenda-cor vencimento"></span>
-
-            Faturamento / Dia 00
-
-        </div>
-
-
-        <div class="legenda-item">
-
-            <span class="legenda-cor pos"></span>
-
-            Avisos (2-14 Dias)
-
-        </div>
-
-
-        <div class="legenda-item">
-
-            <span class="legenda-cor whatsapp"></span>
-
-            WhatsApp (D+14)
-
-        </div>
-
-
-        <div class="legenda-item">
-
-            <span class="legenda-cor bloqueio"></span>
-
-            Bloqueio / Assessorias
-
-        </div>
-
-
-        <div class="legenda-item">
-
-            <span class="legenda-cor cancelamento"></span>
-
-            Serasa / Corte
-
-        </div>
-
-
-        <div class="legenda-item">
-
-            <span class="legenda-cor relatorio"></span>
-
-            Relatórios
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         CALENDÁRIO
-         ===================================================== -->
-
-    <div id="calendarView">
-
-        <div class="calendar-grid-header">
-
-            <div>Dom</div>
-            <div>Seg</div>
-            <div>Ter</div>
-            <div>Qua</div>
-            <div>Qui</div>
-            <div>Sex</div>
-            <div>Sáb</div>
-
-        </div>
-
-
-        <div
-            id="calendarDays"
-            class="calendar-grid"
-        ></div>
-
-    </div>
-
-
-    <!-- =====================================================
-         VISÃO EM LISTA
-         ===================================================== -->
-
-    <div
-        id="listView"
-        class="alternate-view hidden"
-    ></div>
-
-
-    <!-- =====================================================
-         TIMELINE
-         ===================================================== -->
-
-    <div
-        id="timelineView"
-        class="alternate-view hidden"
-    ></div>
-
-</div>
-
-
-<!-- =========================================================
-     ÁREA DE IMPRESSÃO
-     ========================================================= -->
-
-<div
-    id="printReport"
-    class="print-report"
-></div>
-
-
-<!-- =========================================================
-     MODAL DE DETALHES DO DIA
-     ========================================================= -->
-
-<div
-    id="modalDetalhes"
-    class="modal-overlay"
-    onclick="fecharModalFora(event)"
->
-
-    <div class="modal-content">
-
-        <div class="modal-header">
-
-            <h3 id="modalTitulo">
-                Eventos do Dia
-            </h3>
-
-            <button
-                class="modal-close"
-                onclick="fecharModal()"
-                aria-label="Fechar"
-            >
-                X
-            </button>
-
-        </div>
-
-
-        <div
-            class="modal-body"
-            id="modalCorpo"
-        ></div>
-
-    </div>
-
-</div>
-
-
-<!-- =========================================================
-     MODAL DE LOGIN ADMINISTRATIVO
-     ========================================================= -->
-
-<div
-    id="modalLoginAdmin"
-    class="modal-overlay"
->
-
-    <div class="modal-content admin-modal">
-
-        <div class="modal-header">
-
+          <div>
             <h3>
-
-                <span
-                    class="ui-icon"
-                    aria-hidden="true"
-                >
-                    ⌑
-                </span>
-
-                Acesso administrativo
-
+              <span class="ui-icon ui-chart" aria-hidden="true">▥</span>
+              Ações individuais do período
             </h3>
-
-
-            <button
-                class="modal-close"
-                onclick="fecharLoginAdmin()"
-                aria-label="Fechar"
-            >
-                X
-            </button>
-
-        </div>
-
-
-        <div class="modal-body">
-
-            <p class="admin-help">
-                Somente usuários cadastrados como administradores
-                podem criar ou alterar exceções.
+            <p>
+              Quantidades separadas por ação, respeitando os filtros e o modo de
+              visualização.
             </p>
-
-
-            <label for="adminEmail">
-                E-mail
-            </label>
-
-            <input
-                id="adminEmail"
-                type="email"
-                autocomplete="username"
-                placeholder="seu@email.com"
-            >
-
-
-            <label for="adminPassword">
-                Senha
-            </label>
-
-            <input
-                id="adminPassword"
-                type="password"
-                autocomplete="current-password"
-                placeholder="••••••••"
-            >
-
-
-            <button
-                class="admin-primary"
-                onclick="loginAdmin()"
-            >
-                Entrar
-            </button>
-
-
-            <p
-                id="loginAdminStatus"
-                class="admin-status"
-            ></p>
-
+          </div>
+          <span id="dashboardPeriodLabel" class="dashboard-period-label"></span>
         </div>
-
+        <div class="kpi-panel" id="kpiPanel"></div>
+      </div>
+      <!-- FILTRO GLOBAL DO DASHBOARD -->
+      <div id="dashboardFilter" class="dashboard-action-filter hidden">
+        <span>
+          <span class="ui-icon" aria-hidden="true"> ⌕ </span>
+          Filtro ativo:
+          <strong id="dashboardFilterName"></strong>
+        </span>
+        <button type="button" onclick="limparFiltrosDashboard()">
+          Limpar filtros
+        </button>
+      </div>
+      <!--  FILTROS E CONTROLES -->
+      <div class="controls-panel">
+        <!-- Filtro por vencimento -->
+        <div class="config-group">
+          <label for="selectFiltroVencimento">
+            <span class="ui-icon ui-target" aria-hidden="true"> ◎ </span>
+            Focar Vencimento:
+          </label>
+          <select id="selectFiltroVencimento" onchange="mudarFiltroVencimento()">
+            <option value="">-- Todos os Vencimentos --</option>
+            <option value="5">Dia 05</option>
+            <option value="8">Dia 08</option>
+            <option value="10">Dia 10</option>
+            <option value="12">Dia 12</option>
+            <option value="14">Dia 14</option>
+            <option value="15">Dia 15 (Principal)</option>
+            <option value="20">Dia 20</option>
+            <option value="25">Dia 25</option>
+            <option value="26">Dia 26</option>
+          </select>
+        </div>
+        <!-- Filtro por tipo -->
+        <div class="config-group">
+          <label for="selectFiltroTipo">
+            <span class="ui-icon ui-search" aria-hidden="true"> ⌕ </span>
+            Filtrar Evento:
+          </label>
+          <select id="selectFiltroTipo" onchange="mudarFiltroTipo()">
+            <option value="">Todos os tipos</option>
+            <option value="fatura">Faturas / E-mails / Faturamentos</option>
+            <option value="bloqueio">Bloqueios</option>
+            <option value="sms">SMS</option>
+            <option value="cancelamento">Cancelamento / Serasa / Corte</option>
+            <option value="relatorio">Relatórios Operacionais</option>
+          </select>
+        </div>
+        <!-- Seleção de mês/ano -->
+        <div class="date-selectors">
+          <select id="selectMes" onchange="mudarMesAno()"></select>
+          <select id="selectAno" onchange="mudarMesAno()"></select>
+        </div>
+        <!-- Alternância de layout -->
+        <button id="btnToggleLayout" class="btn-toggle-layout" onclick="alternarLayout()">
+          <span class="ui-icon ui-layout" aria-hidden="true"> ▦ </span>
+          Modo Atual:
+          <strong> Layout Completo </strong>
+          (Clique p/ Enxuta)
+        </button>
+        <!-- Notificações -->
+        <button id="btnNotificacoes" class="btn-admin" onclick="solicitarNotificacoes()">
+          <span class="ui-icon ui-bell" aria-hidden="true"> • </span>
+          Ativar notificações
+        </button>
+        <!-- Administração -->
+        <button id="btnAdmin" class="btn-admin" onclick="abrirLoginAdmin()">
+          <span class="ui-icon ui-lock" aria-hidden="true"> ⌑ </span>
+          Administração
+        </button>
+        <span id="notificationStatus" class="notification-status" aria-live="polite"></span>
+      </div>
+      <!-- BARRA DE FERRAMENTAS -->
+      <div class="actions-toolbar">
+        <!-- Modos de visualização -->
+        <div class="view-tabs">
+          <button id="btnCalendario" class="view-tab active" onclick="mudarVisualizacao('calendario')">
+            <span class="ui-icon"> ▦ </span>
+            Calendário
+          </button>
+          <button id="btnLista" class="view-tab" onclick="mudarVisualizacao('lista')">
+            <span class="ui-icon"> ☷ </span>
+            Modo Lista
+          </button>
+          <button id="btnTimeline" class="view-tab" onclick="mudarVisualizacao('timeline')">
+            <span class="ui-icon"> ◉ </span>
+            Timeline
+          </button>
+        </div>
+        <!-- Exportações -->
+        <div class="export-actions">
+          <button class="export-btn csv" onclick="exportarCSV()">
+            <span class="ui-icon"> ↓ </span>
+            Exportar CSV
+          </button>
+          <button class="export-btn pdf" onclick="exportarPDF()">
+            <span class="ui-icon"> ▤ </span>
+            Exportar PDF
+          </button>
+          <button class="export-btn guide" onclick="baixarGuiaCalendario()">
+            <span class="ui-icon"> ▧ </span>
+            Guia do calendário
+          </button>
+        </div>
+      </div>
+      <!--LEGENDA-->
+      <div class="legenda-container">
+        <div class="legenda-item">
+          <span class="legenda-cor ante"></span>
+          -10 Dias
+        </div>
+        <div class="legenda-item">
+          <span class="legenda-cor vencimento"></span>
+          Faturamento / Dia 00
+        </div>
+        <div class="legenda-item">
+          <span class="legenda-cor pos"></span>=
+          Avisos (2-14 Dias)
+        </div>
+        <div class="legenda-item">
+          <span class="legenda-cor whatsapp"></span>
+          WhatsApp (D+14)
+        </div>
+        <div class="legenda-item">
+          <span class="legenda-cor bloqueio"></span>
+          Bloqueio / Assessorias
+        </div>
+        <div class="legenda-item">
+          <span class="legenda-cor cancelamento"></span>
+          Serasa / Corte
+        </div>
+        <div class="legenda-item">
+          <span class="legenda-cor relatorio"></span>
+          Relatórios
+        </div>
+      </div>
+      <!--CALENDÁRIO-->
+      <div id="calendarView">
+        <div class="calendar-grid-header">
+          <div>Dom</div>
+          <div>Seg</div>
+          <div>Ter</div>
+          <div>Qua</div>
+          <div>Qui</div>
+          <div>Sex</div>
+          <div>Sáb</div>
+        </div>
+        <div id="calendarDays" class="calendar-grid"></div>
+      </div>
+      <!-- VISÃO EM LISTA -->
+      <div id="listView" class="alternate-view hidden"></div>
+      <!-- TIMELINE -->
+      <div id="timelineView" class="alternate-view hidden"></div>
     </div>
-
-</div>
-
-
-<!-- =========================================================
-     PAINEL ADMINISTRATIVO
-     ========================================================= -->
-
-<div
-    id="modalAdmin"
-    class="modal-overlay"
->
-
-    <div
-        class="modal-content admin-modal admin-wide"
-    >
-
+    <!-- ÁREA DE IMPRESSÃO -->
+    <div id="printReport" class="print-report"></div>
+    <!-- MODAL DE DETALHES DO DIA -->
+    <div id="modalDetalhes" class="modal-overlay" onclick="fecharModalFora(event)">
+      <div class="modal-content">
         <div class="modal-header">
-
-            <h3>
-
-                <span
-                    class="ui-icon"
-                    aria-hidden="true"
-                >
-                    ⚙
-                </span>
-
-                Administração do calendário
-
-            </h3>
-
-
-            <button
-                class="modal-close"
-                onclick="fecharAdmin()"
-                aria-label="Fechar"
-            >
-                X
-            </button>
-
+          <h3 id="modalTitulo">Eventos do Dia</h3>
+          <button class="modal-close" onclick="fecharModal()" aria-label="Fechar">
+            X
+          </button>
         </div>
-
-
-        <div class="modal-body">
-
-
-            <!-- Sessão atual -->
-
-            <div class="admin-session">
-
-                <span id="adminUserLabel"></span>
-
-                <button
-                    class="admin-secondary"
-                    onclick="logoutAdmin()"
-                >
-                    Sair
-                </button>
-
-            </div>
-
-
-            <!-- =================================================
-                 NOVA EXCEÇÃO
-                 ================================================= -->
-
-            <div class="exception-form">
-
-                <h4>
-
-                    <span
-                        class="ui-icon"
-                        aria-hidden="true"
-                    >
-                        +
-                    </span>
-
-                    Nova exceção
-
-                </h4>
-
-
-                <p class="admin-help">
-
-                    A regra original continua igual.
-                    Esta alteração vale somente para esta ocorrência.
-
-                </p>
-
-
-                <label for="excOriginalDate">
-                    Data do evento original
-                </label>
-
-                <input
-                    id="excOriginalDate"
-                    type="date"
-                >
-
-
-                <label for="excTipoAcao">
-                    Tipo de ação
-                </label>
-
-                <select
-                    id="excTipoAcao"
-                    onchange="atualizarAutocompleteAcoes()"
-                >
-
-                    <option value="">
-                        Selecione o tipo...
-                    </option>
-
-                    <option value="ante">
-                        Pré-vencimento
-                    </option>
-
-                    <option value="vencimento">
-                        Vencimento / Faturamento
-                    </option>
-
-                    <option value="pos">
-                        Avisos pós-vencimento
-                    </option>
-
-                    <option value="whatsapp">
-                        WhatsApp
-                    </option>
-
-                    <option value="bloqueio">
-                        Bloqueio / Assessorias
-                    </option>
-
-                    <option value="cancelamento">
-                        Serasa / Cancelamento
-                    </option>
-
-                    <option value="relatorio">
-                        Relatórios
-                    </option>
-
-                </select>
-
-
-                <label for="excEventTitle">
-
-                    Evento
-
-                    <span class="field-hint">
-                        (digite para pesquisar)
-                    </span>
-
-                </label>
-
-
-                <input
-                    id="excEventTitle"
-                    type="text"
-                    list="excEventOptions"
-                    autocomplete="off"
-                    placeholder="Selecione um tipo primeiro"
-                >
-
-
-                <input
-                    id="excActionKey"
-                    type="hidden"
-                    value=""
-                >
-
-
-                <div
-                    id="excEventHint"
-                    class="autocomplete-hint"
-                >
-                    Escolha uma ação da lista para manter
-                    o tipo e a regra corretos.
-                </div>
-
-
-                <datalist
-                    id="excEventOptions"
-                ></datalist>
-
-
-                <label for="excVencimento">
-                    Vencimento base (opcional)
-                </label>
-
-                <input
-                    id="excVencimento"
-                    type="text"
-                    placeholder="Ex.: 15"
-                >
-
-
-                <label for="excNewDate">
-                    Nova data
-                </label>
-
-                <input
-                    id="excNewDate"
-                    type="date"
-                >
-
-
-                <label for="excMotivo">
-                    Motivo
-                </label>
-
-                <input
-                    id="excMotivo"
-                    type="text"
-                    placeholder="Ex.: Feriado"
-                >
-
-
-                <button
-                    class="admin-primary"
-                    onclick="salvarExcecao()"
-                >
-                    Salvar exceção
-                </button>
-
-
-                <p
-                    id="exceptionStatus"
-                    class="admin-status"
-                ></p>
-
-            </div>
-
-
-            <!-- =================================================
-                 EXCEÇÕES CADASTRADAS
-                 ================================================= -->
-
-            <div class="exception-history">
-
-                <div class="admin-section-title">
-
-                    <h4>
-
-                        <span
-                            class="ui-icon"
-                            aria-hidden="true"
-                        >
-                            ▤
-                        </span>
-
-                        Exceções cadastradas
-
-                    </h4>
-
-
-                    <button
-                        class="admin-secondary"
-                        onclick="carregarExcecoes()"
-                    >
-                        Atualizar
-                    </button>
-
-                </div>
-
-
-                <div id="exceptionList">
-                    Carregando...
-                </div>
-
-            </div>
-
-
-            <!-- =================================================
-                 HISTÓRICO
-                 ================================================= -->
-
-            <div class="exception-history">
-
-                <div class="admin-section-title">
-
-                    <h4>
-
-                        <span
-                            class="ui-icon"
-                            aria-hidden="true"
-                        >
-                            ◷
-                        </span>
-
-                        Histórico de alterações
-
-                    </h4>
-
-                </div>
-
-
-                <div id="auditList">
-                    Carregando...
-                </div>
-
-            </div>
-
-
-            <!-- =================================================
-                 GUIA
-                 ================================================= -->
-
-            <div class="guide-panel">
-
-                <div>
-
-                    <h4>
-
-                        <span
-                            class="ui-icon"
-                            aria-hidden="true"
-                        >
-                            ▧
-                        </span>
-
-                        Guia do calendário
-
-                    </h4>
-
-
-                    <p>
-
-                        Baixe um guia rápido explicando as regras,
-                        visualizações, exceções, histórico e uso
-                        administrativo.
-
-                    </p>
-
-                </div>
-
-
-                <button
-                    class="admin-secondary"
-                    type="button"
-                    onclick="baixarGuiaCalendario()"
-                >
-
-                    <span
-                        class="ui-icon"
-                        aria-hidden="true"
-                    >
-                        ↓
-                    </span>
-
-                    Baixar guia em PDF
-
-                </button>
-
-            </div>
-
-
-        </div>
-
+        <div class="modal-body" id="modalCorpo"></div>
+      </div>
     </div>
-
-</div>
-
-
-<!-- =========================================================
-     SUPABASE
-     ========================================================= -->
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script src="script.js"></script>
-
-</body>
+    <!-- MODAL DE LOGIN ADMINISTRATIVO -->
+    <div id="modalLoginAdmin" class="modal-overlay">
+      <div class="modal-content admin-modal">
+        <div class="modal-header">
+          <h3>
+            <span class="ui-icon" aria-hidden="true"> ⌑ </span>
+            Acesso administrativo
+          </h3>
+          <button class="modal-close" onclick="fecharLoginAdmin()" aria-label="Fechar">
+            X
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="admin-help">
+            Somente usuários cadastrados como administradores podem criar ou
+            alterar exceções.
+          </p>
+          <label for="adminEmail"> E-mail </label>=
+          <input id="adminEmail" type="email" autocomplete="username" placeholder="seu@email.com"/>
+          <label for="adminPassword"> Senha </label>
+          <input id="adminPassword" type="password" autocomplete="current-password" placeholder="••••••••"/>
+          <button class="admin-primary" onclick="loginAdmin()">Entrar</button>
+          <p id="loginAdminStatus" class="admin-status"></p>
+        </div>
+      </div>
+    </div>
+    <!-- PAINEL ADMINISTRATIVO -->
+    <div id="modalAdmin" class="modal-overlay">
+      <div class="modal-content admin-modal admin-wide">
+        <div class="modal-header">
+          <h3>
+            <span class="ui-icon" aria-hidden="true"> ⚙ </span>
+            Administração do calendário
+          </h3>
+          <button class="modal-close" onclick="fecharAdmin()" aria-label="Fechar">
+            X
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Sessão atual -->
+          <div class="admin-session">
+            <span id="adminUserLabel"></span>
+            <button class="admin-secondary" onclick="logoutAdmin()">
+              Sair
+            </button>
+          </div>
+          <!-- NOVA EXCEÇÃO -->
+          <div class="exception-form">
+            <h4>
+              <span class="ui-icon" aria-hidden="true"> + </span>
+              Nova exceção
+            </h4>S
+            <p class="admin-help">
+              A regra original continua igual. Esta alteração vale somente para
+              esta ocorrência.
+            </p>
+            <label for="excOriginalDate"> Data do evento original </label>
+            <input id="excOriginalDate" type="date" />
+            <label for="excTipoAcao"> Tipo de ação </label>S
+            <select id="excTipoAcao" onchange="atualizarAutocompleteAcoes()">
+              <option value="">Selecione o tipo...</option>
+              <option value="ante">Pré-vencimento</option>
+              <option value="vencimento">Vencimento / Faturamento</option>
+              <option value="pos">Avisos pós-vencimento</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="bloqueio">Bloqueio / Assessorias</option>
+              <option value="cancelamento">Serasa / Cancelamento</option>
+              <option value="relatorio">Relatórios</option>
+            </select>
+            <label for="excEventTitle">
+              Evento
+              <span class="field-hint"> (digite para pesquisar) </span>
+            </label>
+            <input
+              id="excEventTitle"
+              type="text"
+              list="excEventOptions"
+              autocomplete="off"
+              placeholder="Selecione um tipo primeiro"
+            />
+            <input id="excActionKey" type="hidden" value="" />
+            <div id="excEventHint" class="autocomplete-hint">
+              Escolha uma ação da lista para manter o tipo e a regra corretos.
+            </div>
+            <datalist id="excEventOptions"></datalist>
+            <label for="excVencimento"> Vencimento base (opcional) </label>
+            <input id="excVencimento" type="text" placeholder="Ex.: 15" />
+            <label for="excNewDate"> Nova data </label>
+            <input id="excNewDate" type="date" />
+            <label for="excMotivo"> Motivo </label>
+            <input id="excMotivo" type="text" placeholder="Ex.: Feriado" />
+            <button class="admin-primary" onclick="salvarExcecao()">
+              Salvar exceção
+            </button>
+            <p id="exceptionStatus" class="admin-status"></p>
+          </div>
+          <!-- EXCEÇÕES CADASTRADAS -->
+          <div class="exception-history">
+            <div class="admin-section-title">
+              <h4>
+                <span class="ui-icon" aria-hidden="true"> ▤ </span>
+                Exceções cadastradas
+              </h4>
+              <button class="admin-secondary" onclick="carregarExcecoes()">
+                Atualizar
+              </button>
+            </div>
+            <div id="exceptionList">Carregando...</div>
+          </div>
+          <!-- HISTÓRICO -->
+          <div class="exception-history">
+            <div class="admin-section-title">
+              <h4>
+                <span class="ui-icon" aria-hidden="true"> ◷ </span>
+                Histórico de alterações
+              </h4>
+            </div>
+            <div id="auditList">Carregando...</div>
+          </div>
+          <!-- GUIA -->
+          <div class="guide-panel">
+            <div>
+              <h4>
+                <span class="ui-icon" aria-hidden="true"> ▧ </span>
+                Guia do calendário
+              </h4>
+              <p>
+                Baixe um guia rápido explicando as regras, visualizações,
+                exceções, histórico e uso administrativo.
+              </p>
+            </div>
+            <button class="admin-secondary" type="button" onclick="baixarGuiaCalendario()">
+              <span class="ui-icon" aria-hidden="true"> ↓ </span>
+              Baixar guia em PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+  </body>
 </html>
