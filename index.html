@@ -29,6 +29,11 @@
       href="mailto:joao.silva@soumaster.com.br?subject=Feedback%20-%20Calendário%20de%20Cobrança&body=Olá,%0A%0AGostaria%20de%20enviar%20o%20seguinte%20feedback:%0A%0A%0AObrigado!">
       💬 Contato [Email]
     </a>
+    <!-- Administração -->
+        <button id="btnAdmin" class="btn-admin" onclick="abrirLoginAdmin()">
+          <span class="ui-icon ui-lock" aria-hidden="true"> ⌑ </span>
+          Administração
+        </button>
     <div class="container">
       <!-- CABEÇALHO -->
       <header>
@@ -126,14 +131,9 @@
           (Clique p/ Enxuta)
         </button>
         <!-- Notificações -->
-        <button id="btnNotificacoes" class="btn-admin" onclick="solicitarNotificacoes()">
+        <button id="btnNotificacoes" class="btn-not" onclick="solicitarNotificacoes()">
           <span class="ui-icon ui-bell" aria-hidden="true"> • </span>
           Ativar notificações
-        </button>
-        <!-- Administração -->
-        <button id="btnAdmin" class="btn-admin" onclick="abrirLoginAdmin()">
-          <span class="ui-icon ui-lock" aria-hidden="true"> ⌑ </span>
-          Administração
         </button>
         <span id="notificationStatus" class="notification-status" aria-live="polite"></span>
       </div>
@@ -284,14 +284,14 @@
             <h4>
               <span class="ui-icon" aria-hidden="true"> + </span>
               Nova exceção
-            </h4>S
+            </h4>
             <p class="admin-help">
               A regra original continua igual. Esta alteração vale somente para
               esta ocorrência.
             </p>
             <label for="excOriginalDate"> Data do evento original </label>
             <input id="excOriginalDate" type="date" />
-            <label for="excTipoAcao"> Tipo de ação </label>S
+            <label for="excTipoAcao"> Tipo de ação </label>
             <select id="excTipoAcao" onchange="atualizarAutocompleteAcoes()">
               <option value="">Selecione o tipo...</option>
               <option value="ante">Pré-vencimento</option>

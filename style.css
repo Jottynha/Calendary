@@ -855,6 +855,19 @@ p.subtitle {
   font-size: 0.85rem;
   cursor: pointer;
   font-weight: 600;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+}
+.btn-not {
+  background: #172554;
+  color: #bfdbfe;
+  border: 1px solid #2563eb;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
 }
 .btn-admin:hover {
   background: #1e3a8a;
