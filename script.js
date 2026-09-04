@@ -1569,6 +1569,51 @@ function coletarEventosDoMes(ano, mes) {
         });
       });
     });
+      // ================================================================
+    // E-MAIL PDF D+4 — TODOS OS DIAS
+    //
+    // Quando existir um vencimento oficial gerando D+4,
+    // o evento normal já foi criado acima.
+    //
+    // Nos demais dias, criamos uma indicação genérica para:
+    // reparcelamentos / renegociações.
+    // ================================================================
+
+    const totalDiasMesCompleto =
+        new Date(ano, mes + 1, 0).getDate();
+
+    for (let d = 1; d <= totalDiasMesCompleto; d++) {
+
+        const eventosDoDia = mapaEventos[d] || [];
+
+        const possuiEmailD4 =
+            eventosDoDia.some(
+                ev => ev.actionKey === "email_4"
+            );
+
+        if (!possuiEmailD4) {
+
+            const dataGenerica =
+                new Date(ano, mes, d);
+
+            adicionarEvento(d, {
+                vencimentoOriginal: "Reparcelamento/Renegociação",
+                competenciaMes: mes + 1,
+                competenciaAno: ano,
+                tituloRegra: "E-mail PDF",
+                actionKey: "email_4",
+                tipo: "pos",
+                categoria: "fatura",
+                desc:
+                    "Envio de E-mail PDF D+4 para clientes com " +
+                    "vencimentos decorrentes de reparcelamento ou renegociação. " +
+                    "Aplicável quando não houver vencimento oficial gerando o D+4 neste dia.",
+                diasOffset: 4,
+                dataReal: dataGenerica,
+                eventoGenerico: true
+            });
+        }
+    }
   } else {
     const competencias = [
       { ano: mes === 0 ? ano - 1 : ano, mes: mes === 0 ? 11 : mes - 1 },
@@ -2441,14 +2486,17 @@ function formatarDataCompleta(data) {
 }
 
 function formatarVencimentoCompleto(ev) {
-  if (
-    ev.vencimentoOriginal === undefined ||
-    ev.vencimentoOriginal === null ||
-    ev.vencimentoOriginal === "N/A" ||
-    ev.vencimentoOriginal === "Geral"
-  ) {
-    return ev.vencimentoOriginal || "N/A";
-  }
+  if (ev.eventoGenerico) {
+        return "Reparcelamento / Renegociação";
+    }
+
+    if (
+        ev.vencimentoOriginal === "N/A" ||
+        ev.vencimentoOriginal === "Geral" ||
+        ev.vencimentoOriginal === "Bloqueados"
+    ) {
+        return ev.vencimentoOriginal;
+    }
 
   const mes = Number(ev.competenciaMes);
   const ano = Number(ev.competenciaAno);
