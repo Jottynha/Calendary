@@ -2311,153 +2311,591 @@ function exportarCSV() {
   URL.revokeObjectURL(url);
 }
 
+function escaparHTML(valor) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function exportarPDF() {
-  const eventos = obterListaEventos();
+  try {
+    const eventos = obterListaEventos();
 
-  const mesNome = dataAtual.toLocaleDateString("pt-BR", {
-    month: "long",
-    year: "numeric",
-  });
+    const mesNome = dataAtual.toLocaleDateString("pt-BR", {
+      month: "long",
+      year: "numeric",
+    });
 
-  const printReport = document.getElementById("printReport");
-  if (!printReport) return;
+    const filtros = `${filtroTipoGlobal || "Todos os eventos"}${
+      vencimentoFocoGlobal !== null && vencimentoFocoGlobal !== undefined
+        ? ` | Vencimento: dia ${vencimentoFocoGlobal}`
+        : ""
+    }`;
 
-  const totalBloqueios = eventos.filter(
-    (e) => e.categoria === "bloqueio"
-  ).length;
+    const totalBloqueios = eventos.filter(
+      (e) => e.categoria === "bloqueio",
+    ).length;
 
-  const totalSMS = eventos.filter(
-    (e) => e.categoria === "sms"
-  ).length;
+    const totalSMS = eventos.filter(
+      (e) => e.categoria === "sms",
+    ).length;
 
-  const totalFaturas = eventos.filter(
-    (e) => e.categoria === "fatura"
-  ).length;
+    const totalFaturas = eventos.filter(
+      (e) => e.categoria === "fatura",
+    ).length;
 
-  const totalCancelamentos = eventos.filter(
-    (e) => e.categoria === "cancelamento"
-  ).length;
+    const totalCancelamentos = eventos.filter(
+      (e) => e.categoria === "cancelamento",
+    ).length;
 
-  printReport.innerHTML = `
-    <div class="print-header">
-      <div>
-        <div class="print-brand">MASTER</div>
-        <h1>Régua de Cobrança</h1>
-        <p class="print-subtitle">
-          Relatório operacional — ${mesNome}
-        </p>
-      </div>
+    const linhas = eventos.length
+      ? eventos
+          .map((ev) => {
+            const dataEvento =
+              ev.dataReal instanceof Date
+                ? ev.dataReal
+                : new Date(ev.dataReal);
 
-      <div class="print-header-info">
-        <strong>${modoVisaoEnxuta ? "VISÃO ENXUTA" : "VISÃO COMPLETA"}</strong>
-        <span>Gerado em ${new Date().toLocaleDateString("pt-BR")}</span>
-      </div>
-    </div>
+            const vencimento = ev.eventoGenerico
+              ? "Reparcelamento / Renegociação"
+              : formatarVencimentoCompleto(ev);
 
-    <div class="print-divider"></div>
-
-    <div class="print-filters">
-      <strong>Filtros aplicados:</strong>
-      ${filtroTipoGlobal || "Todos os eventos"}
-      ${
-        vencimentoFocoGlobal
-          ? ` | Vencimento: dia ${vencimentoFocoGlobal}`
-          : ""
-      }
-    </div>
-
-    <div class="print-kpis">
-
-      <div class="print-kpi total">
-        <span class="print-kpi-label">TOTAL</span>
-        <strong>${eventos.length}</strong>
-        <small>Eventos</small>
-      </div>
-
-      <div class="print-kpi bloqueio">
-        <span class="print-kpi-label">BLOQUEIOS</span>
-        <strong>${totalBloqueios}</strong>
-        <small>Ações</small>
-      </div>
-
-      <div class="print-kpi sms">
-        <span class="print-kpi-label">SMS</span>
-        <strong>${totalSMS}</strong>
-        <small>Notificações</small>
-      </div>
-
-      <div class="print-kpi fatura">
-        <span class="print-kpi-label">FATURAS / E-MAILS</span>
-        <strong>${totalFaturas}</strong>
-        <small>Comunicações</small>
-      </div>
-
-      <div class="print-kpi cancelamento">
-        <span class="print-kpi-label">SERASA / CANCEL.</span>
-        <strong>${totalCancelamentos}</strong>
-        <small>Ações</small>
-      </div>
-
-    </div>
-
-    <div class="print-section-title">
-      Cronograma de ações e notificações
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Evento</th>
-          <th>Venc.</th>
-          <th>Descrição</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        ${
-          eventos.length
-            ? eventos
-                .map(
-                  (ev) => `
-                    <tr>
-                      <td class="print-date">
-                        ${ev.dataReal.toLocaleDateString("pt-BR")}
-                      </td>
-
-                      <td class="print-event">
-                        ${ev.tituloRegra}
-                      </td>
-
-                      <td class="print-venc">
-                        ${ev.vencimentoOriginal}
-                      </td>
-
-                      <td>
-                        ${ev.desc}
-                      </td>
-                    </tr>
-                  `
-                )
-                .join("")
-            : `
+            return `
               <tr>
-                <td colspan="4" class="print-empty">
-                  Nenhum evento encontrado para os filtros selecionados.
+                <td class="print-date">
+                  ${escaparHTML(
+                    dataEvento.toLocaleDateString("pt-BR"),
+                  )}
+                </td>
+
+                <td class="print-event">
+                  ${escaparHTML(ev.tituloRegra)}
+                </td>
+
+                <td class="print-venc">
+                  ${escaparHTML(vencimento)}
+                </td>
+
+                <td>
+                  ${escaparHTML(ev.desc)}
                 </td>
               </tr>
-            `
-        }
-      </tbody>
-    </table>
+            `;
+          })
+          .join("")
+      : `
+          <tr>
+            <td colspan="4" class="print-empty">
+              Nenhuma tarefa encontrada para os filtros selecionados.
+            </td>
+          </tr>
+        `;
 
-    <div class="print-footer">
-      <span>Master | Régua de Cobrança</span>
-      <span>Relatório operacional</span>
+    const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <title>
+    Master | Régua de Cobrança — ${escaparHTML(mesNome)}
+  </title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #172033;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      padding: 18px 22px;
+    }
+
+    .print-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      padding-bottom: 8px;
+    }
+
+    .print-brand {
+      color: #155eef;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 3px;
+    }
+
+    h1 {
+      margin: 0;
+      color: #102a56;
+      font-size: 22px;
+    }
+
+    .print-subtitle {
+      margin: 4px 0 0;
+      color: #64748b;
+      font-size: 10px;
+    }
+
+    .print-header-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      color: #64748b;
+      font-size: 8px;
+    }
+
+    .print-header-info strong {
+      color: #155eef;
+    }
+
+    .print-divider {
+      height: 4px;
+      margin: 8px 0 12px;
+      border-radius: 4px;
+
+      background:
+        linear-gradient(
+          90deg,
+          #155eef 0%,
+          #155eef 82%,
+          #f5c400 82%,
+          #f5c400 100%
+        );
+    }
+
+    .print-filters {
+      background: #f4f7fb;
+      border: 1px solid #dbe5f0;
+      border-left: 4px solid #155eef;
+      border-radius: 5px;
+      padding: 7px 9px;
+      margin-bottom: 12px;
+      font-size: 8.5px;
+      color: #475569;
+    }
+
+    .print-kpis {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+      margin-bottom: 15px;
+    }
+
+    .print-kpi {
+      border: 1px solid #dbe5f0;
+      border-radius: 7px;
+      padding: 7px 9px;
+      background: #ffffff;
+    }
+
+    .print-kpi-label {
+      display: block;
+      color: #64748b;
+      font-size: 6.5px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .print-kpi strong {
+      display: block;
+      color: #102a56;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .print-kpi small {
+      display: block;
+      color: #94a3b8;
+      font-size: 6.5px;
+      margin-top: 3px;
+    }
+
+    .print-section-title {
+      color: #102a56;
+      font-size: 11px;
+      font-weight: 800;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #155eef;
+      margin-bottom: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 7.5px;
+    }
+
+    th,
+    td {
+      border: 1px solid #dbe5f0;
+      padding: 5px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #155eef;
+      color: #ffffff;
+      font-size: 7px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .print-date {
+      width: 11%;
+      color: #155eef;
+      font-weight: 700;
+    }
+
+    .print-event {
+      width: 26%;
+      color: #172033;
+      font-weight: 600;
+    }
+
+    .print-venc {
+      width: 19%;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .print-empty {
+      text-align: center;
+      color: #94a3b8;
+      padding: 20px;
+    }
+
+    .print-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 6px;
+      border-top: 1px solid #dbe5f0;
+      color: #94a3b8;
+      font-size: 6.5px;
+    }
+
+    .print-footer span:first-child {
+      color: #155eef;
+      font-weight: 700;
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+
+    @media print {
+
+      body {
+        padding: 0;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="print-header">
+
+    <div>
+
+      <div class="print-brand">
+        MASTER
+      </div>
+
+      <h1>
+        Régua de Cobrança
+      </h1>
+
+      <p class="print-subtitle">
+        Relatório operacional — ${escaparHTML(mesNome)}
+      </p>
+
     </div>
-  `;
 
-  window.print();
+    <div class="print-header-info">
+
+      <strong>
+        ${
+          modoVisaoEnxuta
+            ? "VISÃO ENXUTA"
+            : "VISÃO COMPLETA"
+        }
+      </strong>
+
+      <span>
+        Gerado em
+        ${escaparHTML(
+          new Date().toLocaleString("pt-BR"),
+        )}
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <div class="print-divider"></div>
+
+
+  <div class="print-filters">
+
+    <strong>
+      Filtros aplicados:
+    </strong>
+
+    ${escaparHTML(filtros)}
+
+  </div>
+
+
+  <div class="print-kpis">
+
+    <div class="print-kpi">
+
+      <span class="print-kpi-label">
+        TOTAL
+      </span>
+
+      <strong>
+        ${eventos.length}
+      </strong>
+
+      <small>
+        Eventos
+      </small>
+
+    </div>
+
+
+    <div class="print-kpi">
+
+      <span class="print-kpi-label">
+        BLOQUEIOS
+      </span>
+
+      <strong>
+        ${totalBloqueios}
+      </strong>
+
+      <small>
+        Ações
+      </small>
+
+    </div>
+
+
+    <div class="print-kpi">
+
+      <span class="print-kpi-label">
+        SMS
+      </span>
+
+      <strong>
+        ${totalSMS}
+      </strong>
+
+      <small>
+        Notificações
+      </small>
+
+    </div>
+
+
+    <div class="print-kpi">
+
+      <span class="print-kpi-label">
+        FATURAS / E-MAILS
+      </span>
+
+      <strong>
+        ${totalFaturas}
+      </strong>
+
+      <small>
+        Comunicações
+      </small>
+
+    </div>
+
+
+    <div class="print-kpi">
+
+      <span class="print-kpi-label">
+        SERASA / CANCEL.
+      </span>
+
+      <strong>
+        ${totalCancelamentos}
+      </strong>
+
+      <small>
+        Ações
+      </small>
+
+    </div>
+
+  </div>
+
+
+  <div class="print-section-title">
+    Cronograma de ações e notificações
+  </div>
+
+
+  <table>
+
+    <thead>
+
+      <tr>
+        <th>Data</th>
+        <th>Evento</th>
+        <th>Vencimento / origem</th>
+        <th>Descrição</th>
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      ${linhas}
+
+    </tbody>
+
+  </table>
+
+
+  <div class="print-footer">
+
+    <span>
+      Master | Régua de Cobrança
+    </span>
+
+    <span>
+      Relatório operacional
+    </span>
+
+  </div>
+
+</body>
+
+</html>
+`;
+
+    const janela = window.open(
+      "",
+      "_blank",
+      "width=1200,height=800",
+    );
+
+    if (!janela) {
+
+      alert(
+        "O navegador bloqueou a janela de impressão. " +
+        "Permita pop-ups para este site e tente novamente.",
+      );
+
+      return;
+    }
+
+    janela.document.open();
+
+    janela.document.write(html);
+
+    janela.document.close();
+
+
+    const imprimir = () => {
+
+      try {
+
+        janela.focus();
+        janela.print();
+
+      } catch (erro) {
+
+        console.error(
+          "Erro ao abrir impressão:",
+          erro,
+        );
+
+      }
+
+    };
+
+
+    janela.onload = () => {
+
+      setTimeout(
+        imprimir,
+        250,
+      );
+
+    };
+
+
+    if (
+      janela.document.readyState === "complete"
+    ) {
+
+      setTimeout(
+        imprimir,
+        250,
+      );
+
+    }
+
+
+    setTimeout(() => {
+
+      try {
+
+        janela.close();
+
+      } catch (_) {}
+
+    }, 30000);
+
+  } catch (erro) {
+
+    console.error(
+      "Erro ao gerar relatório para PDF:",
+      erro,
+    );
+
+    alert(
+      "Não foi possível gerar o relatório para PDF. " +
+      "Abra o console do navegador (F12) para verificar o erro.",
+    );
+
+  }
 }
 
 function fecharModal() {
