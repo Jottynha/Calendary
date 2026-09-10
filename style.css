@@ -3013,3 +3013,332 @@ body.dark-theme .month-nav-btn:hover {
     min-width: 65px;
   }
 }
+
+/* ================================================================
+   ABAS PRINCIPAIS DO SITE + SIMULADOR INDIVIDUAL
+   ================================================================ */
+.site-tabs {
+  max-width: 950px;
+  margin: 0 auto 14px;
+  display: flex;
+  gap: 8px;
+  padding: 5px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+.site-tab {
+  flex: 1;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.82rem;
+  transition: 0.2s ease;
+}
+
+.site-tab:hover {
+  background: var(--hover-bg);
+  color: var(--text-main);
+}
+
+.site-tab.active {
+  background: #172554;
+  border-color: var(--accent-blue);
+  color: #bfdbfe;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.12);
+}
+
+.site-area.hidden {
+  display: none !important;
+}
+
+.site-area-simulador {
+  max-width: 950px;
+  margin: 0 auto;
+}
+
+.simulador-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+}
+
+.simulador-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 18px;
+  margin-bottom: 18px;
+}
+
+.simulador-kicker {
+  display: inline-block;
+  color: var(--accent-blue);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-bottom: 5px;
+}
+
+.simulador-header h2 {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 1.35rem;
+}
+
+.simulador-header p {
+  margin: 7px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.simulador-form {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.simulador-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.simulador-field input {
+  width: 100%;
+  min-height: 40px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  background: var(--panel-bg);
+  color: var(--text-main);
+  padding: 9px 11px;
+  outline: none;
+}
+
+.simulador-field input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
+}
+
+.simulador-primary,
+.simulador-secondary {
+  min-height: 40px;
+  border-radius: 7px;
+  padding: 0 14px;
+  cursor: pointer;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+}
+
+.simulador-primary {
+  background: #155eef;
+  color: white;
+  border-color: #155eef;
+}
+
+.simulador-primary:hover {
+  background: #0b4bc4;
+}
+
+.simulador-secondary {
+  background: var(--panel-bg);
+  color: var(--text-main);
+}
+
+.simulador-secondary:hover {
+  background: var(--hover-bg);
+}
+
+.simulador-resumo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.simulador-resumo-item {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--panel-bg);
+  padding: 10px 12px;
+}
+
+.simulador-resumo-item span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.simulador-resumo-item strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+
+.cliente-timeline-area {
+  padding-top: 3px;
+}
+
+.simulador-vazio {
+  border: 1px dashed var(--border-color);
+  border-radius: 9px;
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.cliente-timeline {
+  position: relative;
+  margin: 8px 0 0;
+  padding-left: 24px;
+}
+
+.cliente-timeline::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--border-color);
+}
+
+.cliente-timeline-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 118px 1fr;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.cliente-timeline-marker {
+  position: absolute;
+  left: -21px;
+  top: 13px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  border: 3px solid var(--card-bg);
+  box-shadow: 0 0 0 1px var(--accent-blue);
+  z-index: 2;
+}
+
+.cliente-timeline-date {
+  text-align: right;
+  padding-top: 8px;
+}
+
+.cliente-timeline-date strong {
+  display: block;
+  color: var(--accent-blue);
+  font-size: 0.78rem;
+}
+
+.cliente-timeline-date span {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+}
+
+.cliente-timeline-card {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 11px 13px;
+  background: var(--panel-bg);
+}
+
+.cliente-timeline-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.cliente-timeline-title {
+  color: var(--text-main);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.cliente-timeline-offset {
+  flex: 0 0 auto;
+  color: var(--accent-blue);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.cliente-timeline-card p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.cliente-timeline-vencimento {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(21, 94, 239, 0.10);
+  color: var(--accent-blue);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.simulador-observacao {
+  margin-top: 18px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent-blue);
+  border-radius: 5px;
+  background: var(--panel-bg);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .site-tabs {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .simulador-form {
+    grid-template-columns: 1fr;
+  }
+
+  .simulador-resumo {
+    grid-template-columns: 1fr;
+  }
+
+  .cliente-timeline-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding-left: 4px;
+  }
+
+  .cliente-timeline-date {
+    text-align: left;
+  }
+
+  .cliente-timeline-date span {
+    display: inline;
+    margin-left: 5px;
+  }
+}

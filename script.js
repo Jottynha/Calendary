@@ -3073,3 +3073,537 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   atualizarContadorNotificacao();
 });
+
+// ================================================================
+// ABA SEPARADA — SIMULADOR DE LINHA DO TEMPO DO CLIENTE
+// ================================================================
+
+function abrirAbaSite(aba) {
+  const areaCalendario =
+    document.getElementById("siteAreaCalendario");
+
+  const areaSimulador =
+    document.getElementById("siteAreaSimulador");
+
+  const tabCalendario =
+    document.getElementById("siteTabCalendario");
+
+  const tabSimulador =
+    document.getElementById("siteTabSimulador");
+
+  if (!areaCalendario || !areaSimulador) return;
+
+  const mostrarSimulador =
+    aba === "simulador";
+
+  areaCalendario.classList.toggle(
+    "hidden",
+    mostrarSimulador
+  );
+
+  areaSimulador.classList.toggle(
+    "hidden",
+    !mostrarSimulador
+  );
+
+  if (tabCalendario) {
+    tabCalendario.classList.toggle(
+      "active",
+      !mostrarSimulador
+    );
+  }
+
+  if (tabSimulador) {
+    tabSimulador.classList.toggle(
+      "active",
+      mostrarSimulador
+    );
+  }
+
+  if (mostrarSimulador) {
+    const campo =
+      document.getElementById(
+        "simuladorDataVencimento"
+      );
+
+    if (campo) {
+      setTimeout(() => {
+        campo.focus();
+      }, 100);
+    }
+  }
+}
+
+
+// ================================================================
+// FORMATAÇÃO DE DATAS
+// ================================================================
+
+function formatarDataTimelineCliente(data) {
+  if (!(data instanceof Date)) {
+    data = new Date(data);
+  }
+
+  if (Number.isNaN(data.getTime())) {
+    return "Data inválida";
+  }
+
+  return data.toLocaleDateString(
+    "pt-BR",
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }
+  );
+}
+
+
+function formatarOffsetTimelineCliente(dias) {
+  if (dias === 0) {
+    return "D0";
+  }
+
+  if (dias < 0) {
+    return `D${dias}`;
+  }
+
+  if (dias % 1 !== 0) {
+    return `D+${String(dias).replace(".", ",")}`;
+  }
+
+  return `D+${dias}`;
+}
+
+
+// ================================================================
+// CALCULA A LINHA DO TEMPO DO CLIENTE
+// ================================================================
+
+function montarEventosTimelineCliente(
+  dataVencimento
+) {
+  const eventos = [];
+
+  regrasRegua.forEach((regra) => {
+
+    // Mantém a mesma regra já existente
+    // para ações específicas por vencimento.
+    if (
+      regra.vencimentosPermitidos &&
+      !regra.vencimentosPermitidos.includes(
+        dataVencimento.getDate()
+      )
+    ) {
+      return;
+    }
+
+    const dataEvento =
+      calcularDataEventoExata(
+        dataVencimento,
+        regra.dias
+      );
+
+    eventos.push({
+
+      dataReal:
+        dataEvento,
+
+      diasOffset:
+        regra.dias,
+
+      tituloRegra:
+        regra.titulo,
+
+      tipo:
+        regra.tipo,
+
+      categoria:
+        regra.categoria,
+
+      actionKey:
+        regra.actionKey,
+
+      desc:
+        regra.desc,
+
+      vencimentoOriginal:
+        dataVencimento.getDate(),
+
+    });
+  });
+
+
+  // Ordena cronologicamente.
+  eventos.sort(
+    (a, b) =>
+      a.dataReal - b.dataReal
+  );
+
+  return eventos;
+}
+
+
+// ================================================================
+// GERA A LINHA DO TEMPO NA TELA
+// ================================================================
+
+function gerarLinhaDoTempoCliente() {
+
+  const input =
+    document.getElementById(
+      "simuladorDataVencimento"
+    );
+
+  const timeline =
+    document.getElementById(
+      "simuladorTimeline"
+    );
+
+  const resumo =
+    document.getElementById(
+      "simuladorResumo"
+    );
+
+  if (
+    !input ||
+    !timeline ||
+    !resumo
+  ) {
+    return;
+  }
+
+
+  // ------------------------------------------------
+  // Nenhuma data informada
+  // ------------------------------------------------
+
+  if (!input.value) {
+
+    timeline.innerHTML = `
+      <div class="simulador-vazio">
+        Informe uma data de vencimento
+        para gerar a linha do tempo.
+      </div>
+    `;
+
+    resumo.classList.add("hidden");
+
+    return;
+  }
+
+
+  // ------------------------------------------------
+  // Converte YYYY-MM-DD sem problema de timezone
+  // ------------------------------------------------
+
+  const partes =
+    input.value
+      .split("-")
+      .map(Number);
+
+  const ano =
+    partes[0];
+
+  const mes =
+    partes[1];
+
+  const dia =
+    partes[2];
+
+
+  const dataVencimento =
+    new Date(
+      ano,
+      mes - 1,
+      dia
+    );
+
+
+  // ------------------------------------------------
+  // Validação
+  // ------------------------------------------------
+
+  if (
+    Number.isNaN(
+      dataVencimento.getTime()
+    ) ||
+    dataVencimento.getFullYear() !== ano ||
+    dataVencimento.getMonth() !== mes - 1 ||
+    dataVencimento.getDate() !== dia
+  ) {
+
+    timeline.innerHTML = `
+      <div class="simulador-vazio">
+        A data informada é inválida.
+      </div>
+    `;
+
+    resumo.classList.add("hidden");
+
+    return;
+  }
+
+
+  // ------------------------------------------------
+  // Monta os eventos
+  // ------------------------------------------------
+
+  const eventos =
+    montarEventosTimelineCliente(
+      dataVencimento
+    );
+
+
+  const diaVencimento =
+    dataVencimento.getDate();
+
+
+  const possuiWhatsApp =
+    eventos.some(
+      (evento) =>
+        evento.actionKey ===
+        "whatsapp_14"
+    );
+
+
+  // ------------------------------------------------
+  // Resumo
+  // ------------------------------------------------
+
+  resumo.innerHTML = `
+
+    <div class="simulador-resumo-item">
+
+      <span>
+        Vencimento
+      </span>
+
+      <strong>
+        ${escaparHTML(
+          formatarDataTimelineCliente(
+            dataVencimento
+          )
+        )}
+      </strong>
+
+    </div>
+
+
+    <div class="simulador-resumo-item">
+
+      <span>
+        Dia do vencimento
+      </span>
+
+      <strong>
+        Dia ${diaVencimento}
+      </strong>
+
+    </div>
+
+
+    <div class="simulador-resumo-item">
+
+      <span>
+        Ações previstas
+      </span>
+
+      <strong>
+        ${eventos.length}
+        ${
+          possuiWhatsApp
+            ? " • WhatsApp incluso"
+            : ""
+        }
+      </strong>
+
+    </div>
+
+  `;
+
+  resumo.classList.remove(
+    "hidden"
+  );
+
+
+  // ------------------------------------------------
+  // Nenhum evento
+  // ------------------------------------------------
+
+  if (!eventos.length) {
+
+    timeline.innerHTML = `
+      <div class="simulador-vazio">
+        Nenhuma ação encontrada
+        para a data informada.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  // ------------------------------------------------
+  // Linha do tempo
+  // ------------------------------------------------
+
+  timeline.innerHTML = `
+
+    <div class="cliente-timeline">
+
+      ${eventos.map(
+        (evento) => {
+
+          const dataFormatada =
+            formatarDataTimelineCliente(
+              evento.dataReal
+            );
+
+          const offset =
+            formatarOffsetTimelineCliente(
+              evento.diasOffset
+            );
+
+          return `
+
+            <div
+              class="cliente-timeline-item"
+            >
+
+              <span
+                class="cliente-timeline-marker"
+                aria-hidden="true"
+              ></span>
+
+
+              <div
+                class="cliente-timeline-date"
+              >
+
+                <strong>
+                  ${escaparHTML(
+                    dataFormatada
+                  )}
+                </strong>
+
+                <span>
+                  ${escaparHTML(
+                    offset
+                  )}
+                </span>
+
+              </div>
+
+
+              <div
+                class="cliente-timeline-card"
+              >
+
+                <div
+                  class="cliente-timeline-top"
+                >
+
+                  <span
+                    class="cliente-timeline-title"
+                  >
+                    ${escaparHTML(
+                      evento.tituloRegra
+                    )}
+                  </span>
+
+
+                  <span
+                    class="cliente-timeline-offset"
+                  >
+                    ${escaparHTML(
+                      labelTempo(evento)
+                    )}
+                  </span>
+
+                </div>
+
+
+                <p>
+                  ${escaparHTML(
+                    evento.desc
+                  )}
+                </p>
+
+
+                <span
+                  class="cliente-timeline-vencimento"
+                >
+                  Vencimento base:
+                  ${diaVencimento}
+                </span>
+
+              </div>
+
+            </div>
+
+          `;
+        }
+      ).join("")}
+
+    </div>
+
+  `;
+}
+
+
+// ================================================================
+// LIMPAR SIMULADOR
+// ================================================================
+
+function limparLinhaDoTempoCliente() {
+
+  const input =
+    document.getElementById(
+      "simuladorDataVencimento"
+    );
+
+  const timeline =
+    document.getElementById(
+      "simuladorTimeline"
+    );
+
+  const resumo =
+    document.getElementById(
+      "simuladorResumo"
+    );
+
+
+  if (input) {
+    input.value = "";
+  }
+
+
+  if (resumo) {
+
+    resumo.innerHTML = "";
+
+    resumo.classList.add(
+      "hidden"
+    );
+  }
+
+
+  if (timeline) {
+
+    timeline.innerHTML = `
+
+      <div class="simulador-vazio">
+
+        Digite a data de vencimento
+        e clique em
+        <strong>
+          Gerar linha do tempo
+        </strong>.
+
+      </div>
+
+    `;
+  }
+
+}
