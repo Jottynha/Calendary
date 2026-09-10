@@ -1522,99 +1522,171 @@ function coletarEventosDoMes(ano, mes) {
     mapaEventos[dia].push(ev);
   };
 
-  if (!modoVisaoEnxuta) {
+    if (!modoVisaoEnxuta) {
+
+    // REGRAS DO LAYOUT COMPLETO
+
     const competencias = [];
+
     for (let deslocamento = -3; deslocamento <= 1; deslocamento++) {
-      const dataCompetencia = new Date(ano, mes + deslocamento, 1);
+      const dataCompetencia = new Date(
+        ano,
+        mes + deslocamento,
+        1,
+      );
 
       competencias.push({
         ano: dataCompetencia.getFullYear(),
         mes: dataCompetencia.getMonth(),
       });
     }
+
     competencias.forEach((comp) => {
       diasFaturamentoOficiais.forEach((diaVenc) => {
-        const dataVencimento = new Date(comp.ano, comp.mes, diaVenc);
+
+        const dataVencimento = new Date(
+          comp.ano,
+          comp.mes,
+          diaVenc,
+        );
+
         regrasRegua.forEach((regra) => {
+
           if (
             regra.vencimentosPermitidos &&
             !regra.vencimentosPermitidos.includes(diaVenc)
-          )
+          ) {
             return;
+          }
+
           const dataEvento = calcularDataEventoExata(
             dataVencimento,
             regra.dias,
           );
+
           if (
             dataEvento.getFullYear() === ano &&
             dataEvento.getMonth() === mes
           ) {
+
             const dNum = dataEvento.getDate();
+
             adicionarEvento(dNum, {
               vencimentoOriginal: diaVenc,
               competenciaMes: comp.mes + 1,
               competenciaAno: comp.ano,
               tituloRegra: regra.titulo,
+
               actionKey:
                 regra.actionKey ||
                 obterAcaoCatalogo(regra.titulo)?.actionKey ||
                 regra.titulo,
+
               tipo: regra.tipo,
               categoria: regra.categoria,
               desc: regra.desc,
               diasOffset: regra.dias,
               dataReal: dataEvento,
             });
+
           }
+
         });
+
       });
     });
-      // ================================================================
-    // E-MAIL PDF D+4 — TODOS OS DIAS
-    //
-    // Quando existir um vencimento oficial gerando D+4,
-    // o evento normal já foi criado acima.
-    //
-    // Nos demais dias, criamos uma indicação genérica para:
-    // reparcelamentos / renegociações.
-    // ================================================================
 
-    const totalDiasMesCompleto =
-        new Date(ano, mes + 1, 0).getDate();
 
-    for (let d = 1; d <= totalDiasMesCompleto; d++) {
+    // ============================================================
+    // DATA DE CORTE — DIA 12
+    // ============================================================
 
-        const eventosDoDia = mapaEventos[d] || [];
+    const dataCorte = new Date(ano, mes, 12);
 
-        const possuiEmailD4 =
-            eventosDoDia.some(
-                ev => ev.actionKey === "email_4"
-            );
+    const msPorDia = 24 * 60 * 60 * 1000;
 
-        if (!possuiEmailD4) {
+    const dataLimiteBloqueio = new Date(
+      dataCorte.getTime() - 74.5 * msPorDia,
+    );
 
-            const dataGenerica =
-                new Date(ano, mes, d);
+    const dataLimiteVencimento = new Date(
+      dataCorte.getTime() - 89.5 * msPorDia,
+    );
 
-            adicionarEvento(d, {
-                vencimentoOriginal: "Reparcelamento/Renegociação",
-                competenciaMes: mes + 1,
-                competenciaAno: ano,
-                tituloRegra: "E-mail PDF",
-                actionKey: "email_4",
-                tipo: "pos",
-                categoria: "fatura",
-                desc:
-                    "Envio de E-mail PDF D+4 para clientes com " +
-                    "vencimentos decorrentes de reparcelamento ou renegociação. " +
-                    "Aplicável quando não houver vencimento oficial gerando o D+4 neste dia.",
-                diasOffset: 4,
-                dataReal: dataGenerica,
-                eventoGenerico: true
-            });
-        }
+    const anoRef = dataLimiteVencimento.getFullYear();
+    const mesRef = dataLimiteVencimento.getMonth();
+
+    const mesRefNome =
+      dataLimiteVencimento.toLocaleDateString("pt-BR", {
+        month: "long",
+        year: "numeric",
+      });
+
+    const dataLimiteStr =
+      dataLimiteVencimento.toLocaleDateString("pt-BR");
+
+    const vencimentosEntrantes =
+      diasFaturamentoOficiais.filter((diaVenc) => {
+
+        const dataVenc = new Date(
+          anoRef,
+          mesRef,
+          diaVenc,
+        );
+
+        return dataVenc <= dataLimiteVencimento;
+      });
+
+    let detalheRegra = "";
+
+    if (vencimentosEntrantes.length > 0) {
+
+      detalheRegra =
+        `Vencimentos afetados deste ciclo: dias ` +
+        `${vencimentosEntrantes.join(", ")} de ${mesRefNome} ` +
+        `(e todos os anteriores a ${dataLimiteStr}).`;
+
+    } else {
+
+      detalheRegra =
+        `Aplica-se a todos os vencimentos até ${dataLimiteStr}.`;
+
     }
+
+    adicionarEvento(12, {
+
+      vencimentoOriginal: "Bloqueados",
+
+      competenciaMes: mes + 1,
+      competenciaAno: ano,
+
+      tituloRegra:
+        "Data de Corte (Cancelamento)",
+
+      actionKey:
+        "corte_12",
+
+      tipo:
+        "cancelamento",
+
+      categoria:
+        "cancelamento",
+
+      desc:
+        `Cancelamento de clientes bloqueados há ≥ 74.5 dias ` +
+        `(bloqueio até ${dataLimiteBloqueio.toLocaleDateString("pt-BR")}). ` +
+        detalheRegra,
+
+      diasOffset:
+        74.5,
+
+      dataReal:
+        dataCorte,
+    });
+
   } else {
+
+    // VISÃO ENXUTA {
     const competencias = [
       { ano: mes === 0 ? ano - 1 : ano, mes: mes === 0 ? 11 : mes - 1 },
       { ano, mes },
