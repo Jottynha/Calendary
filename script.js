@@ -261,6 +261,17 @@ const catalogoAcoes = [
     tipoEvento: "relatorio",
     descricao: "Relatórios para assessorias e diretoria.",
   },
+  {
+    actionKey: "email_excecoes_diarias",
+    titulo: "Disparos de E-mail por Exceção",
+    grupo: "pos",
+    categoria: "fatura",
+    tipoEvento: "pos",
+    descricao:
+      "Rotina diária: executar os disparos D-10, D+4, D+10 e D+14 " +
+      "de PDF + boleto para clientes com vencimento alterado, exceção, " +
+      "título específico ou outra condição operacional.",
+  },
 ];
 function obterAcaoCatalogo(titulo, tipoEvento = null) {
   return (
@@ -371,6 +382,7 @@ const catalogoDashboardEnxuto = catalogoAcoes.filter((a) =>
     "corte_12",
     "relatorio_b2b",
     "relatorio_assessorias",
+    "email_excecoes_diarias",
   ].includes(a.actionKey),
 );
 
@@ -1727,6 +1739,80 @@ function coletarEventosDoMes(ano, mes) {
         });
       });
     });
+
+        // ============================================================
+    // ROTINA DIÁRIA DE DISPAROS DE E-MAIL POR EXCEÇÃO
+    //
+    // Esta não é uma exceção administrativa cadastrada no Supabase.
+    // É uma rotina operacional que deve ser executada todos os dias
+    // para localizar clientes que entram nas réguas:
+    //
+    // D-10
+    // D+4
+    // D+10
+    // D+14
+    //
+    // O disparo é de PDF + boleto.
+    // ============================================================
+
+    const totalDiasMesEmail =
+      new Date(ano, mes + 1, 0).getDate();
+
+    for (let d = 1; d <= totalDiasMesEmail; d++) {
+
+      const dataRotina =
+        new Date(ano, mes, d);
+
+      adicionarEvento(d, {
+
+        vencimentoOriginal:
+          "Rotina diária",
+
+        competenciaMes:
+          mes + 1,
+
+        competenciaAno:
+          ano,
+
+        tituloRegra:
+          "Disparos de E-mail por Exceção",
+
+        actionKey:
+          "email_excecoes_diarias",
+
+        tipo:
+          "email-excecao",
+
+        categoria:
+          "fatura",
+
+        desc:
+          "Rotina diária para executar os disparos de E-mail " +
+          "com PDF do boleto nas réguas D-10, D+4, D+10 e D+14. " +
+          "Aplicável a clientes com alteração de vencimento, " +
+          "exceção operacional, título específico ou outra " +
+          "condição que faça o cliente entrar nessas réguas.",
+
+        diasOffset:
+          0,
+
+        dataReal:
+          dataRotina,
+
+        rotinaDiaria:
+          true,
+
+        subRegras:
+          [
+            "D-10",
+            "D+4",
+            "D+10",
+            "D+14",
+          ],
+
+      });
+
+    }
 
     const faturamentosFixos = [
       {

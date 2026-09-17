@@ -3342,3 +3342,8 @@ body.dark-theme .month-nav-btn:hover {
     margin-left: 5px;
   }
 }
+.event-dot.email-excecao,
+.badge-type.email-excecao {
+  background-color: #7c3aed !important;
+  color: #fff;
+}
