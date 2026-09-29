@@ -87,24 +87,16 @@ const regrasRegua = [
     desc: "Inclusão das mensalidades negativadas no Serasa.",
   },
   {
-    dias: 74.5,
-    titulo: "Cancelamento",
-    tipo: "cancelamento",
-    categoria: "cancelamento",
-    actionKey: "cancelamento_745",
-    desc: "Cancelamento automático do serviço, calculado a partir da data de vencimento.",
-  },
-  {
     dias: 75,
-    titulo: "Desativação",
+    titulo: "Cancelamento / Desativação",
     tipo: "cancelamento",
     categoria: "cancelamento",
-    actionKey: "desativacao_75",
-    desc: "Desativação definitiva (MVNO), calculada a partir da data de vencimento.",
+    actionKey: "cancelamento_desativacao_75",
+    desc: "Cancelamento e desativação do serviço, tratados como uma única ação no D+75 a partir da data de vencimento.",
   },
 ];
-// REGRAS DA VISÃO ENXUTA
-const regrasEnxutas = [
+// REGRAS DA VISÃO OPERACIONAL
+const regrasOperacionais = [
   {
     dias: 14,
     titulo: "WhatsApp/E-mail",
@@ -198,20 +190,12 @@ const catalogoAcoes = [
     descricao: "30 dias após o vencimento.",
   },
   {
-    actionKey: "cancelamento_745",
-    titulo: "Cancelamento",
+    actionKey: "cancelamento_desativacao_75",
+    titulo: "Cancelamento / Desativação",
     grupo: "cancelamento",
     categoria: "cancelamento",
     tipoEvento: "cancelamento",
-    descricao: "74,5 dias após o vencimento.",
-  },
-  {
-    actionKey: "desativacao_75",
-    titulo: "Desativação",
-    grupo: "cancelamento",
-    categoria: "cancelamento",
-    tipoEvento: "cancelamento",
-    descricao: "75 dias após o vencimento.",
+    descricao: "75 dias após o vencimento; cancelamento e desativação são tratados como uma única ação.",
   },
   {
     actionKey: "fat_normal",
@@ -279,8 +263,7 @@ const catalogoAcoes = [
     categoria: "bloqueio",
     tipoEvento: "bloqueio-parcelamento",
     descricao:
-      "Rotina diária para clientes que parcelaram a dívida e permanecem " +
-      "com o parcelamento em aberto por mais de 3 dias.",
+      "Rotina diária para clientes em parcelamento com a dívida em aberto há mais de 3 dias.",
   },
 ];
 function obterAcaoCatalogo(titulo, tipoEvento = null) {
@@ -305,10 +288,7 @@ function obterRotuloAutocomplete(acao) {
       bloqueio_15: "D+15",
       assessorias_18: "D+18",
       serasa_30: "D+30",
-      cancelamento_745: "D+74,5",
-      desativacao_75: "D+75",
-      email_excecoes_diarias: "Rotina diária",
-      bloqueio_parcelamento_3d: "Rotina diária",
+      cancelamento_desativacao_75: "D+75",
     }[acao.actionKey] || "Data fixa";
   return `${acao.titulo} — ${detalhes}`;
 }
@@ -378,13 +358,12 @@ const acoesDashboardCompleto = [
   "bloqueio_15",
   "assessorias_18",
   "serasa_30",
-  "cancelamento_745",
-  "desativacao_75",
+  "cancelamento_desativacao_75",
 ];
 const catalogoDashboardCompleto = acoesDashboardCompleto
   .map((key) => catalogoAcoes.find((a) => a.actionKey === key))
   .filter(Boolean);
-const catalogoDashboardEnxuto = catalogoAcoes.filter((a) =>
+const catalogoDashboardOperacional = catalogoAcoes.filter((a) =>
   [
     "whatsapp_14",
     "bloqueio_15",
@@ -404,9 +383,10 @@ let vencimentoFocoGlobal = null;
 let filtroTipoGlobal = "";
 let filtroAcaoGlobal = null;
 let visualizacaoAtual = "calendario";
-let modoVisaoEnxuta = false; // false = Layout Completo (Original) | true = Visão Enxuta
+let modoVisaoOperacional = false; // false = Visão por Vencimento | true = Visão Operacional
 
 document.addEventListener("DOMContentLoaded", async () => {
+  atualizarFundoVisao();
   exibirDiaHoje();
   popularSeletoresMesAno();
   await carregarExcecoes();
@@ -802,20 +782,39 @@ function mudarVisualizacao(view) {
   if (view !== "calendario") renderizarVisualizacaoAlternativa();
 }
 
-// Alternar entre Layout Completo e Visão Enxuta
+// Alternar entre Visão por Vencimento e Visão Operacional
+function atualizarFundoVisao() {
+  const body = document.body;
+  if (!body) return;
+
+  body.classList.toggle("view-operacional", modoVisaoOperacional);
+  body.classList.toggle("view-vencimento", !modoVisaoOperacional);
+}
+
 function alternarLayout() {
-  modoVisaoEnxuta = !modoVisaoEnxuta;
+  modoVisaoOperacional = !modoVisaoOperacional;
+
   const btn = document.getElementById("btnToggleLayout");
+  const texto = btn?.querySelector(".layout-control-text");
+
+  atualizarFundoVisao();
+
   if (btn) {
-    if (modoVisaoEnxuta) {
-      btn.classList.add("enxuto-active");
-      btn.innerHTML = `⚡ Modo Atual: <strong>Visão Enxuta</strong> (Clique p/ Completo)`;
-    } else {
-      btn.classList.remove("enxuto-active");
-      btn.innerHTML = `📋 Modo Atual: <strong>Layout Completo</strong> (Clique p/ Enxuta)`;
+    btn.classList.toggle("operacional-active", modoVisaoOperacional);
+
+    if (texto) {
+      texto.textContent = modoVisaoOperacional
+        ? "Visão Operacional"
+        : "Visão por Vencimento";
     }
+
+    btn.title = modoVisaoOperacional
+      ? "Mudar para Visão por Vencimento"
+      : "Mudar para Visão Operacional";
   }
+
   renderizarTudo();
+  fecharMenuLateral();
 }
 
 function dataISO(data) {
@@ -891,7 +890,7 @@ function aplicarExcecoesAoMapa(mapa, ano, mes) {
 
     const regra =
       regrasRegua.find((r) => r.titulo === exc.event_title) ||
-      regrasEnxutas.find((r) => r.titulo === exc.event_title);
+      regrasOperacionais.find((r) => r.titulo === exc.event_title);
 
     const ev = {
       vencimentoOriginal: exc.vencimento_original ?? "Exceção",
@@ -1000,10 +999,21 @@ async function verificarAdmin() {
 
 function atualizarBotaoAdmin() {
   const btn = document.getElementById("btnAdmin");
-  if (btn) btn.textContent = ehAdmin ? "⚙️ Administração" : "🔐 Administração";
+  if (!btn) return;
+
+  const icon = btn.querySelector(".ui-lock");
+  const text = btn.querySelector(".admin-control-text");
+
+  if (icon) icon.textContent = ehAdmin ? "⚙" : "⌑";
+  if (text) text.textContent = ehAdmin ? "Administração (logado)" : "Administração";
+
+  btn.title = ehAdmin
+    ? "Abrir administração — usuário autenticado"
+    : "Abrir administração — login necessário";
 }
 
 async function logoutAdmin() {
+  fecharMenuLateral();
   if (supabaseClient) await supabaseClient.auth.signOut();
   usuarioAdmin = null;
   ehAdmin = false;
@@ -1249,7 +1259,7 @@ async function salvarExcecaoDoModal() {
 
   const eventoRef =
     regrasRegua.find((r) => r.titulo === titulo) ||
-    regrasEnxutas.find((r) => r.titulo === titulo);
+    regrasOperacionais.find((r) => r.titulo === titulo);
   const payload = {
     original_date: original,
     new_date: nova,
@@ -1370,7 +1380,7 @@ async function salvarExcecao() {
 
   const eventoRef =
     regrasRegua.find((r) => r.actionKey === acaoCatalogo.actionKey) ||
-    regrasEnxutas.find((r) => r.actionKey === acaoCatalogo.actionKey) ||
+    regrasOperacionais.find((r) => r.actionKey === acaoCatalogo.actionKey) ||
     acaoCatalogo;
 
   const payload = {
@@ -1547,7 +1557,7 @@ function coletarEventosDoMes(ano, mes) {
     mapaEventos[dia].push(ev);
   };
 
-    if (!modoVisaoEnxuta) {
+    if (!modoVisaoOperacional) {
 
     // REGRAS DO LAYOUT COMPLETO
 
@@ -1711,7 +1721,7 @@ function coletarEventosDoMes(ano, mes) {
 
   } else {
 
-    // VISÃO ENXUTA {
+    // VISÃO OPERACIONAL {
     const competencias = [
       { ano: mes === 0 ? ano - 1 : ano, mes: mes === 0 ? 11 : mes - 1 },
       { ano, mes },
@@ -1720,7 +1730,7 @@ function coletarEventosDoMes(ano, mes) {
     competencias.forEach((comp) => {
       diasFaturamentoOficiais.forEach((diaVenc) => {
         const dataVencimento = new Date(comp.ano, comp.mes, diaVenc);
-        regrasEnxutas.forEach((regra) => {
+        regrasOperacionais.forEach((regra) => {
           if (
             regra.vencimentosPermitidos &&
             !regra.vencimentosPermitidos.includes(diaVenc)
@@ -1827,75 +1837,41 @@ function coletarEventosDoMes(ano, mes) {
 
     }
 
-    // ============================================================
-    // ROTINA DIÁRIA — BLOQUEIO DE PARCELAMENTO > 3 DIAS
+        // ============================================================
+    // ROTINA DIÁRIA — BLOQUEIO DE PARCELAMENTO
     //
-    // A ação aparece todos os dias na Visão Enxuta.
-    // A elegibilidade operacional é:
-    //   - cliente com dívida parcelada/negociada;
-    //   - parcelamento ainda em aberto;
-    //   - mais de 3 dias em aberto.
-    //
-    // O calendário atual não possui uma fonte de dados de clientes/
-    // parcelamentos para filtrar nomes ou contratos automaticamente.
-    // Portanto, aqui é criada a ação operacional diária, que deverá
-    // ser executada apenas sobre os clientes elegíveis.
+    // Executada todos os dias na Visão Operacional para a carteira
+    // de clientes que negociaram/parcelaram a dívida e continuam
+    // com o parcelamento em aberto há mais de 3 dias.
     // ============================================================
 
     const totalDiasMesParcelamento =
       new Date(ano, mes + 1, 0).getDate();
 
     for (let d = 1; d <= totalDiasMesParcelamento; d++) {
-
-      const dataRotinaParcelamento =
-        new Date(ano, mes, d);
+      const dataRotinaParcelamento = new Date(ano, mes, d);
 
       adicionarEvento(d, {
-
-        vencimentoOriginal:
-          "Parcelados > 3 dias",
-
-        competenciaMes:
-          mes + 1,
-
-        competenciaAno:
-          ano,
-
-        tituloRegra:
-          "Bloqueio de Parcelamento",
-
-        actionKey:
-          "bloqueio_parcelamento_3d",
-
-        tipo:
-          "bloqueio-parcelamento",
-
-        categoria:
-          "bloqueio",
-
+        vencimentoOriginal: "Parcelamento",
+        competenciaMes: mes + 1,
+        competenciaAno: ano,
+        tituloRegra: "Bloqueio de Parcelamento",
+        actionKey: "bloqueio_parcelamento_3d",
+        tipo: "bloqueio-parcelamento",
+        categoria: "bloqueio",
         desc:
           "Rotina diária de bloqueio para clientes que parcelaram " +
-          "a dívida e permanecem com o parcelamento em aberto por " +
-          "mais de 3 dias. Executar somente nos clientes parcelados " +
-          "que atendam a esse critério.",
-
-        diasOffset:
-          0,
-
-        dataReal:
-          dataRotinaParcelamento,
-
-        rotinaDiaria:
-          true,
-
-        criterioParcelamento:
-          "Parcelamento em aberto por mais de 3 dias",
-
+          "ou negociaram a dívida e continuam com o parcelamento " +
+          "em aberto há mais de 3 dias.",
+        diasOffset: 0,
+        dataReal: dataRotinaParcelamento,
+        rotinaDiaria: true,
+        somenteParcelados: true,
+        criterioDiasAberto: ">3",
       });
-
     }
 
-    const faturamentosFixos = [
+const faturamentosFixos = [
       {
         dia: 16,
         titulo: "Faturamento Normal",
@@ -2063,12 +2039,6 @@ function renderizarAcoesHoje() {
     return;
   }
   function formatarVencimentoHoje(ev) {
-    if (ev.rotinaDiaria) {
-      return ev.vencimentoOriginal === "Parcelados > 3 dias"
-        ? "Parcelados > 3 dias"
-        : "Rotina diária";
-    }
-
     if (
       ev.vencimentoOriginal === "N/A" ||
       ev.vencimentoOriginal === "Geral" ||
@@ -2094,12 +2064,12 @@ function renderizarAcoesHoje() {
     });
   }
   function resumoOffset(ev) {
-    if (ev.categoria === "relatorio") {
-      return "Tarefa recorrente";
-    }
-
     if (ev.rotinaDiaria) {
       return "Rotina diária";
+    }
+
+    if (ev.categoria === "relatorio") {
+      return "Tarefa recorrente";
     }
 
     if (ev.diasOffset === 0) {
@@ -2151,8 +2121,8 @@ function renderizarAcoesHoje() {
 }
 
 function labelTempo(ev) {
+  if (ev.rotinaDiaria) return "Rotina diária";
   if (ev.categoria === "relatorio") return "Tarefa Recorrente";
-  if (ev.rotinaDiaria) return "Rotina Diária";
   if (ev.diasOffset === 0) return "Data Fixa / Vencimento";
   return ev.diasOffset < 0
     ? `${Math.abs(ev.diasOffset)} dias antes`
@@ -2363,8 +2333,8 @@ function renderizarVisualizacaoAlternativa() {
 
 function atualizarKPIs() {
   const eventos = obterListaEventos();
-  const catalogo = modoVisaoEnxuta
-    ? catalogoDashboardEnxuto
+  const catalogo = modoVisaoOperacional
+    ? catalogoDashboardOperacional
     : catalogoDashboardCompleto;
   const painel = document.getElementById("kpiPanel");
   const periodo = document.getElementById("dashboardPeriodLabel");
@@ -2375,7 +2345,7 @@ function atualizarKPIs() {
       month: "long",
       year: "numeric",
     });
-    periodo.textContent = `${modoVisaoEnxuta ? "Visão enxuta" : "Layout completo"} • ${nomeMes}`;
+    periodo.textContent = `${modoVisaoOperacional ? "Visão operacional" : "Visão por vencimento"} • ${nomeMes}`;
   }
 
   const icones = {
@@ -2556,7 +2526,7 @@ function exportarCSV() {
   const url = URL.createObjectURL(blob),
     a = document.createElement("a");
   a.href = url;
-  a.download = `regua-cobranca-${modoVisaoEnxuta ? "enxuta-" : ""}${mesNome.replace(/ /g, "-")}.csv`;
+  a.download = `regua-cobranca-${modoVisaoOperacional ? "operacional-" : ""}${mesNome.replace(/ /g, "-")}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -2894,8 +2864,8 @@ function exportarPDF() {
 
       <strong>
         ${
-          modoVisaoEnxuta
-            ? "VISÃO ENXUTA"
+          modoVisaoOperacional
+            ? "VISÃO OPERACIONAL"
             : "VISÃO COMPLETA"
         }
       </strong>
@@ -3174,10 +3144,6 @@ function formatarDataCompleta(data) {
 }
 
 function formatarVencimentoCompleto(ev) {
-  if (ev.rotinaDiaria) {
-    return ev.vencimentoOriginal || "Rotina diária";
-  }
-
   if (ev.eventoGenerico) {
         return "Reparcelamento / Renegociação";
     }
@@ -3201,6 +3167,37 @@ function formatarVencimentoCompleto(ev) {
 
   return formatarDataCompleta(dataVencimento);
 }
+
+function alternarMenuLateral() {
+  const menu = document.getElementById("quickSideMenu");
+  const toggle = document.getElementById("quickMenuToggle");
+  if (!menu || !toggle) return;
+
+  const aberto = menu.classList.toggle("open");
+  toggle.setAttribute("aria-expanded", aberto ? "true" : "false");
+  toggle.setAttribute(
+    "aria-label",
+    aberto ? "Fechar menu lateral" : "Abrir menu lateral",
+  );
+}
+
+function fecharMenuLateral() {
+  const menu = document.getElementById("quickSideMenu");
+  const toggle = document.getElementById("quickMenuToggle");
+  if (!menu) return;
+
+  menu.classList.remove("open");
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", "Abrir menu lateral");
+  }
+}
+
+document.addEventListener("click", (event) => {
+  const menu = document.getElementById("quickSideMenu");
+  if (!menu || !menu.classList.contains("open")) return;
+  if (!menu.contains(event.target)) fecharMenuLateral();
+});
 
 function alternarTema() {
   const body = document.body;

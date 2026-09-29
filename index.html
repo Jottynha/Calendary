@@ -11,63 +11,57 @@
   <link href="img/favicon.png" rel="icon" sizes="32x32" type="image/png"/>
   <link href="img/icon-192.png" rel="apple-touch-icon" sizes="192x192"/>
  </head>
- <body>
+ <body class="view-vencimento">
   <div class="brand-header">
    <img alt="Master" class="master-logo" src="img/LOGO MASTER.png"/>
   </div>
-  <button aria-label="Alternar tema" class="theme-toggle" id="btnTema" onclick="alternarTema()" title="Alternar tema" type="button">
-   <span id="themeIcon">
-    ☾
-   </span>
-   <span id="themeText">
-    Modo escuro
-   </span>
-  </button>
-  <a class="feedback-btn" href="mailto:joao.silva@soumaster.com.br?subject=Feedback%20-%20Calend&aacute;rio%20de%20Cobran&ccedil;a&amp;body=Ol&aacute;,%0A%0AGostaria%20de%20enviar%20o%20seguinte%20feedback:%0A%0A%0AObrigado!">
-   💬 Contato [Email]
-  </a>
-  <!-- Administração -->
-  <button class="btn-admin" id="btnAdmin" onclick="abrirLoginAdmin()">
-   <span aria-hidden="true" class="ui-icon ui-lock">
-    ⌑
-   </span>
-   Administra&ccedil;&atilde;o
-  </button>
-  <div class="notification-panel" id="notificationPanel">
-   <div class="notification-config">
-    <span aria-hidden="true" class="ui-icon ui-bell">
-     🔔
-    </span>
-    <select id="notificationInterval" title="Intervalo das notifica&ccedil;&otilde;es">
-     <option value="1">
-      A cada 1 minuto
-     </option>
-     <option selected="" value="5">
-      A cada 5 minutos
-     </option>
-     <option value="10">
-      A cada 10 minutos
-     </option>
-     <option value="15">
-      A cada 15 minutos
-     </option>
-     <option value="30">
-      A cada 30 minutos
-     </option>
-     <option value="60">
-      A cada 1 hora
-     </option>
-    </select>
+  <aside class="quick-side-menu" id="quickSideMenu">
+   <button aria-expanded="false" aria-label="Abrir menu lateral" class="quick-menu-toggle" id="quickMenuToggle" onclick="alternarMenuLateral()" title="Menu rápido" type="button">
+    ☰
+   </button>
+   <div class="quick-side-panel" id="quickSidePanel">
+    <div class="quick-side-title">
+     Controles
+    </div>
+    <button aria-label="Alternar tema" class="side-control theme-control" id="btnTema" onclick="alternarTema(); fecharMenuLateral()" title="Alternar tema" type="button">
+     <span id="themeIcon">☾</span>
+     <span id="themeText">Modo escuro</span>
+    </button>
+    <button class="side-control layout-control" id="btnToggleLayout" onclick="alternarLayout()" title="Alternar visão" type="button">
+     <span aria-hidden="true" class="ui-icon ui-layout">▦</span>
+     <span class="layout-control-text">Visão por Vencimento</span>
+    </button>
+    <button class="side-control admin-control" id="btnAdmin" onclick="fecharMenuLateral(); abrirLoginAdmin();" type="button">
+     <span aria-hidden="true" class="ui-icon ui-lock">⌑</span>
+     <span class="admin-control-text">Administração</span>
+    </button>
+    <div class="notification-panel side-control" id="notificationPanel">
+     <div class="notification-panel-title">
+      <span aria-hidden="true" class="ui-icon ui-bell">🔔</span>
+      <span>Notificações</span>
+     </div>
+     <div class="notification-config">
+      <label for="notificationInterval">Intervalo</label>
+      <select id="notificationInterval" title="Intervalo das notificações">
+       <option value="1">1 minuto</option>
+       <option selected="" value="5">5 minutos</option>
+       <option value="10">10 minutos</option>
+       <option value="15">15 minutos</option>
+       <option value="30">30 minutos</option>
+       <option value="60">1 hora</option>
+      </select>
+     </div>
+     <div class="notification-next">
+      <span>Próximo aviso</span>
+      <strong id="notificationCountdown">--:--</strong>
+     </div>
+    </div>
+    <a class="side-control feedback-control" href="mailto:joao.silva@soumaster.com.br?subject=Feedback%20-%20Calend&aacute;rio%20de%20Cobran&ccedil;a&amp;body=Ol&aacute;,%0A%0AGostaria%20de%20enviar%20o%20seguinte%20feedback:%0A%0A%0AObrigado!" title="Enviar contato por e-mail">
+     <span aria-hidden="true">💬</span>
+     <span>Contato [Email]</span>
+    </a>
    </div>
-   <div class="notification-next">
-    <span>
-     Pr&oacute;ximo aviso
-    </span>
-    <strong id="notificationCountdown">
-     --:--
-    </strong>
-   </div>
-  </div>
+  </aside>
   <!-- NAVEGAÇÃO PRINCIPAL DO SITE -->
   <div aria-label="&Aacute;reas do site" class="site-tabs" role="tablist">
    <button class="site-tab active" id="siteTabCalendario" onclick="abrirAbaSite('calendario')" type="button">
@@ -227,17 +221,7 @@
       </select>
      </div>
      <!-- Navegação e seleção de mês/ano -->
-     <!-- Alternância de layout -->
-     <button class="btn-toggle-layout" id="btnToggleLayout" onclick="alternarLayout()">
-      <span aria-hidden="true" class="ui-icon ui-layout">
-       ▦
-      </span>
-      Modo Atual:
-      <strong>
-       Layout Completo
-      </strong>
-      (Clique p/ Enxuta)
-     </button>
+     <!-- A alternância entre as visões fica no menu lateral suspenso. -->
      <!-- Notificações -->
      <button class="btn-not" id="btnNotificacoes" onclick="solicitarNotificacoes()">
       <span aria-hidden="true" class="ui-icon ui-bell">
