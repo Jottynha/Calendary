@@ -31,6 +31,7 @@
   --color-cancelamento: #ef4444;
   --color-corte: #8e44ad;
   --color-relatorio: #f39c12;
+  --color-bloqueio-parcelamento: #be123c;
 }
 
 body {
@@ -485,6 +486,14 @@ p.subtitle {
 .event-dot.relatorio,
 .badge-type.relatorio {
   background-color: var(--color-relatorio) !important;
+  color: #fff;
+}
+
+.bloqueio-parcelamento,
+.event-dot.bloqueio-parcelamento,
+.badge-type.bloqueio-parcelamento,
+.kpi-icon.bloqueio-parcelamento {
+  background-color: var(--color-bloqueio-parcelamento) !important;
   color: #fff;
 }
 
@@ -3345,5 +3354,12 @@ body.dark-theme .month-nav-btn:hover {
 .event-dot.email-excecao,
 .badge-type.email-excecao {
   background-color: #7c3aed !important;
+  color: #fff;
+}
+
+.event-dot.bloqueio-parcelamento,
+.badge-type.bloqueio-parcelamento,
+.kpi-icon.bloqueio-parcelamento {
+  background-color: var(--color-bloqueio-parcelamento) !important;
   color: #fff;
 }

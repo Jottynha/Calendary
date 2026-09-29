@@ -272,6 +272,16 @@ const catalogoAcoes = [
       "de PDF + boleto para clientes com vencimento alterado, exceção, " +
       "título específico ou outra condição operacional.",
   },
+  {
+    actionKey: "bloqueio_parcelamento_3d",
+    titulo: "Bloqueio de Parcelamento",
+    grupo: "bloqueio",
+    categoria: "bloqueio",
+    tipoEvento: "bloqueio-parcelamento",
+    descricao:
+      "Rotina diária para clientes que parcelaram a dívida e permanecem " +
+      "com o parcelamento em aberto por mais de 3 dias.",
+  },
 ];
 function obterAcaoCatalogo(titulo, tipoEvento = null) {
   return (
@@ -297,6 +307,8 @@ function obterRotuloAutocomplete(acao) {
       serasa_30: "D+30",
       cancelamento_745: "D+74,5",
       desativacao_75: "D+75",
+      email_excecoes_diarias: "Rotina diária",
+      bloqueio_parcelamento_3d: "Rotina diária",
     }[acao.actionKey] || "Data fixa";
   return `${acao.titulo} — ${detalhes}`;
 }
@@ -383,6 +395,7 @@ const catalogoDashboardEnxuto = catalogoAcoes.filter((a) =>
     "relatorio_b2b",
     "relatorio_assessorias",
     "email_excecoes_diarias",
+    "bloqueio_parcelamento_3d",
   ].includes(a.actionKey),
 );
 
@@ -1814,6 +1827,74 @@ function coletarEventosDoMes(ano, mes) {
 
     }
 
+    // ============================================================
+    // ROTINA DIÁRIA — BLOQUEIO DE PARCELAMENTO > 3 DIAS
+    //
+    // A ação aparece todos os dias na Visão Enxuta.
+    // A elegibilidade operacional é:
+    //   - cliente com dívida parcelada/negociada;
+    //   - parcelamento ainda em aberto;
+    //   - mais de 3 dias em aberto.
+    //
+    // O calendário atual não possui uma fonte de dados de clientes/
+    // parcelamentos para filtrar nomes ou contratos automaticamente.
+    // Portanto, aqui é criada a ação operacional diária, que deverá
+    // ser executada apenas sobre os clientes elegíveis.
+    // ============================================================
+
+    const totalDiasMesParcelamento =
+      new Date(ano, mes + 1, 0).getDate();
+
+    for (let d = 1; d <= totalDiasMesParcelamento; d++) {
+
+      const dataRotinaParcelamento =
+        new Date(ano, mes, d);
+
+      adicionarEvento(d, {
+
+        vencimentoOriginal:
+          "Parcelados > 3 dias",
+
+        competenciaMes:
+          mes + 1,
+
+        competenciaAno:
+          ano,
+
+        tituloRegra:
+          "Bloqueio de Parcelamento",
+
+        actionKey:
+          "bloqueio_parcelamento_3d",
+
+        tipo:
+          "bloqueio-parcelamento",
+
+        categoria:
+          "bloqueio",
+
+        desc:
+          "Rotina diária de bloqueio para clientes que parcelaram " +
+          "a dívida e permanecem com o parcelamento em aberto por " +
+          "mais de 3 dias. Executar somente nos clientes parcelados " +
+          "que atendam a esse critério.",
+
+        diasOffset:
+          0,
+
+        dataReal:
+          dataRotinaParcelamento,
+
+        rotinaDiaria:
+          true,
+
+        criterioParcelamento:
+          "Parcelamento em aberto por mais de 3 dias",
+
+      });
+
+    }
+
     const faturamentosFixos = [
       {
         dia: 16,
@@ -1982,6 +2063,12 @@ function renderizarAcoesHoje() {
     return;
   }
   function formatarVencimentoHoje(ev) {
+    if (ev.rotinaDiaria) {
+      return ev.vencimentoOriginal === "Parcelados > 3 dias"
+        ? "Parcelados > 3 dias"
+        : "Rotina diária";
+    }
+
     if (
       ev.vencimentoOriginal === "N/A" ||
       ev.vencimentoOriginal === "Geral" ||
@@ -2009,6 +2096,10 @@ function renderizarAcoesHoje() {
   function resumoOffset(ev) {
     if (ev.categoria === "relatorio") {
       return "Tarefa recorrente";
+    }
+
+    if (ev.rotinaDiaria) {
+      return "Rotina diária";
     }
 
     if (ev.diasOffset === 0) {
@@ -2061,6 +2152,7 @@ function renderizarAcoesHoje() {
 
 function labelTempo(ev) {
   if (ev.categoria === "relatorio") return "Tarefa Recorrente";
+  if (ev.rotinaDiaria) return "Rotina Diária";
   if (ev.diasOffset === 0) return "Data Fixa / Vencimento";
   return ev.diasOffset < 0
     ? `${Math.abs(ev.diasOffset)} dias antes`
@@ -3082,6 +3174,10 @@ function formatarDataCompleta(data) {
 }
 
 function formatarVencimentoCompleto(ev) {
+  if (ev.rotinaDiaria) {
+    return ev.vencimentoOriginal || "Rotina diária";
+  }
+
   if (ev.eventoGenerico) {
         return "Reparcelamento / Renegociação";
     }
